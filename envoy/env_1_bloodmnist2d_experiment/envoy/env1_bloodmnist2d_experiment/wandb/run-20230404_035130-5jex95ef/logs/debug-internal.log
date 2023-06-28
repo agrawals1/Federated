@@ -1,0 +1,109 @@
+2023-04-04 03:51:30,409 INFO    StreamThr :44488 [internal.py:wandb_internal():87] W&B internal server running at pid: 44488, started at: 2023-04-04 03:51:30.408823
+2023-04-04 03:51:30,416 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status
+2023-04-04 03:51:30,422 INFO    WriterThread:44488 [datastore.py:open_for_write():85] open: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/run-5jex95ef.wandb
+2023-04-04 03:51:30,424 DEBUG   SenderThread:44488 [sender.py:send():336] send: header
+2023-04-04 03:51:30,445 DEBUG   SenderThread:44488 [sender.py:send():336] send: run
+2023-04-04 03:51:31,406 INFO    SenderThread:44488 [dir_watcher.py:__init__():219] watching files in: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files
+2023-04-04 03:51:31,407 INFO    SenderThread:44488 [sender.py:_start_run_threads():1078] run started: 5jex95ef with start time 1680560490.411304
+2023-04-04 03:51:31,407 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: summary_record
+2023-04-04 03:51:31,408 INFO    SenderThread:44488 [sender.py:_save_file():1332] saving file wandb-summary.json with policy end
+2023-04-04 03:51:31,409 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: check_version
+2023-04-04 03:51:31,410 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: check_version
+2023-04-04 03:51:31,746 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: run_start
+2023-04-04 03:51:32,435 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/wandb-summary.json
+2023-04-04 03:51:33,470 DEBUG   HandlerThread:44488 [system_info.py:__init__():31] System info init
+2023-04-04 03:51:33,470 DEBUG   HandlerThread:44488 [system_info.py:__init__():46] System info init done
+2023-04-04 03:51:33,470 INFO    HandlerThread:44488 [system_monitor.py:start():183] Starting system monitor
+2023-04-04 03:51:33,471 INFO    HandlerThread:44488 [system_monitor.py:probe():204] Collecting system info
+2023-04-04 03:51:33,472 INFO    SystemMonitor:44488 [system_monitor.py:_start():147] Starting system asset monitoring threads
+2023-04-04 03:51:33,474 INFO    SystemMonitor:44488 [interfaces.py:start():187] Started cpu monitoring
+2023-04-04 03:51:33,476 INFO    SystemMonitor:44488 [interfaces.py:start():187] Started disk monitoring
+2023-04-04 03:51:33,480 INFO    SystemMonitor:44488 [interfaces.py:start():187] Started gpu monitoring
+2023-04-04 03:51:33,482 INFO    SystemMonitor:44488 [interfaces.py:start():187] Started memory monitoring
+2023-04-04 03:51:33,483 INFO    SystemMonitor:44488 [interfaces.py:start():187] Started network monitoring
+2023-04-04 03:51:33,491 DEBUG   HandlerThread:44488 [system_info.py:probe():195] Probing system
+2023-04-04 03:51:33,500 DEBUG   HandlerThread:44488 [system_info.py:_probe_git():180] Probing git
+2023-04-04 03:51:33,521 DEBUG   HandlerThread:44488 [system_info.py:_probe_git():188] Probing git done
+2023-04-04 03:51:33,522 DEBUG   HandlerThread:44488 [system_info.py:probe():240] Probing system done
+2023-04-04 03:51:33,522 DEBUG   HandlerThread:44488 [system_monitor.py:probe():213] {'os': 'Linux-5.19.0-35-generic-x86_64-with-glibc2.17', 'python': '3.8.16', 'heartbeatAt': '2023-04-03T22:21:33.491990', 'startedAt': '2023-04-03T22:21:30.387409', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'codePath': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'git': {'remote': 'https://github.com/securefederatedai/openfl.git', 'commit': '58efdcc57f477f031a58ab8995fade57ca02643f'}, 'email': 'shubham.dkhema@gmail.com', 'root': '/home/shubham/Academics/Thesis/openfl', 'host': 'shubhamIsWorking', 'username': 'shubham', 'executable': '/home/shubham/anaconda3/envs/openfl/bin/python', 'cpu_count': 6, 'cpu_count_logical': 12, 'cpu_freq': {'current': 3.7864166666666663, 'min': 800.0, 'max': 4100.0}, 'cpu_freq_per_core': [{'current': 3.899, 'min': 800.0, 'max': 4100.0}, {'current': 3.923, 'min': 800.0, 'max': 4100.0}, {'current': 3.968, 'min': 800.0, 'max': 4100.0}, {'current': 3.9, 'min': 800.0, 'max': 4100.0}, {'current': 3.965, 'min': 800.0, 'max': 4100.0}, {'current': 3.929, 'min': 800.0, 'max': 4100.0}, {'current': 3.9, 'min': 800.0, 'max': 4100.0}, {'current': 3.9, 'min': 800.0, 'max': 4100.0}, {'current': 3.921, 'min': 800.0, 'max': 4100.0}, {'current': 3.92, 'min': 800.0, 'max': 4100.0}, {'current': 3.937, 'min': 800.0, 'max': 4100.0}, {'current': 3.92, 'min': 800.0, 'max': 4100.0}], 'disk': {'total': 467.8895797729492, 'used': 303.26575088500977}, 'gpu': 'NVIDIA GeForce RTX 2070 with Max-Q Design', 'gpu_count': 1, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 2070 with Max-Q Design', 'memory_total': 8589934592}], 'memory': {'total': 15.424457550048828}}
+2023-04-04 03:51:33,522 INFO    HandlerThread:44488 [system_monitor.py:probe():214] Finished collecting system info
+2023-04-04 03:51:33,522 INFO    HandlerThread:44488 [system_monitor.py:probe():217] Publishing system info
+2023-04-04 03:51:33,522 DEBUG   HandlerThread:44488 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-04-04 03:51:33,524 DEBUG   HandlerThread:44488 [system_info.py:_save_pip():67] Saving pip packages done
+2023-04-04 03:51:33,524 DEBUG   HandlerThread:44488 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-04-04 03:51:34,412 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/conda-environment.yaml
+2023-04-04 03:51:34,413 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/requirements.txt
+2023-04-04 03:51:39,696 DEBUG   HandlerThread:44488 [system_info.py:_save_conda():86] Saving conda packages done
+2023-04-04 03:51:39,697 INFO    HandlerThread:44488 [system_monitor.py:probe():219] Finished publishing system info
+2023-04-04 03:51:39,706 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:51:39,706 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: keepalive
+2023-04-04 03:51:39,707 DEBUG   SenderThread:44488 [sender.py:send():336] send: files
+2023-04-04 03:51:39,707 INFO    SenderThread:44488 [sender.py:_save_file():1332] saving file wandb-metadata.json with policy now
+2023-04-04 03:51:39,719 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:51:39,720 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:51:40,170 DEBUG   SenderThread:44488 [sender.py:send():336] send: telemetry
+2023-04-04 03:51:40,170 DEBUG   SenderThread:44488 [sender.py:send():336] send: telemetry
+2023-04-04 03:51:40,414 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/conda-environment.yaml
+2023-04-04 03:51:40,414 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/wandb-metadata.json
+2023-04-04 03:51:40,420 DEBUG   SenderThread:44488 [sender.py:send():336] send: telemetry
+2023-04-04 03:51:40,823 INFO    wandb-upload_0:44488 [upload_job.py:push():138] Uploaded file /tmp/tmpuueytiorwandb/0zej4y92-wandb-metadata.json
+2023-04-04 03:51:41,421 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:51:46,422 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:51:51,425 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:51:54,718 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:51:54,721 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:51:57,242 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:02,249 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:03,439 INFO    Thread-18 :44488 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_035130-5jex95ef/files/config.yaml
+2023-04-04 03:52:07,765 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:09,717 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:52:09,719 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:52:13,177 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:18,179 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:23,181 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:24,717 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:52:24,719 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:52:28,220 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:33,222 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:33,484 DEBUG   SystemMonitor:44488 [system_monitor.py:_start():161] Starting system metrics aggregation loop
+2023-04-04 03:52:33,491 DEBUG   SenderThread:44488 [sender.py:send():336] send: stats
+2023-04-04 03:52:38,495 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:39,717 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:52:39,719 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:52:44,255 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:49,257 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:54,259 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:52:54,717 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:52:54,718 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:53:00,190 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:03,495 DEBUG   SenderThread:44488 [sender.py:send():336] send: stats
+2023-04-04 03:53:05,497 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:09,717 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:53:09,719 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:53:11,326 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:16,328 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:21,329 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:24,718 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:53:24,720 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:53:27,254 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:32,255 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:33,500 DEBUG   SenderThread:44488 [sender.py:send():336] send: stats
+2023-04-04 03:53:37,503 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:39,718 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:53:39,720 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:53:43,407 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:48,409 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:53,410 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:53:54,719 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:53:54,722 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:53:59,232 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:54:03,499 DEBUG   SenderThread:44488 [sender.py:send():336] send: stats
+2023-04-04 03:54:04,500 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:54:09,503 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:54:09,721 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:54:09,724 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:54:15,272 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:54:20,274 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 03:54:24,719 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 03:54:24,721 DEBUG   SenderThread:44488 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 03:54:26,202 DEBUG   HandlerThread:44488 [handler.py:handle_request():144] handle_request: status_report

@@ -1,0 +1,9 @@
+optional_plugin_components: {}
+params:
+  cuda_devices: []
+shard_descriptor:
+  params:
+    dataname: bloodmnist
+    datapath: ./data
+    rank_worldsize: 1,1
+  template: medmnist_shard_descriptor.MedMNISTShardDescriptor

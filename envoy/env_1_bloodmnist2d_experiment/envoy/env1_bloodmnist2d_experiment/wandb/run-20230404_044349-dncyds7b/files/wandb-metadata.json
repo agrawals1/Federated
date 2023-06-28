@@ -1,0 +1,105 @@
+{
+    "os": "Linux-5.19.0-35-generic-x86_64-with-glibc2.17",
+    "python": "3.8.16",
+    "heartbeatAt": "2023-04-03T23:13:50.563681",
+    "startedAt": "2023-04-03T23:13:49.198240",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py",
+    "codePath": "openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py",
+    "git": {
+        "remote": "https://github.com/securefederatedai/openfl.git",
+        "commit": "58efdcc57f477f031a58ab8995fade57ca02643f"
+    },
+    "email": "shubham.dkhema@gmail.com",
+    "root": "/home/shubham/Academics/Thesis/openfl",
+    "host": "shubhamIsWorking",
+    "username": "shubham",
+    "executable": "/home/shubham/anaconda3/envs/openfl/bin/python",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 0.8998333333333335,
+        "min": 800.0,
+        "max": 4100.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.899,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.899,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.899,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        },
+        {
+            "current": 0.9,
+            "min": 800.0,
+            "max": 4100.0
+        }
+    ],
+    "disk": {
+        "total": 467.8895797729492,
+        "used": 304.18072509765625
+    },
+    "gpu": "NVIDIA GeForce RTX 2070 with Max-Q Design",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 2070 with Max-Q Design",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 15.424457550048828
+    }
+}

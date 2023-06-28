@@ -1,0 +1,26 @@
+2023-04-04 04:42:28,511 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Configure stats pid to 53507
+2023-04-04 04:42:28,512 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Loading settings from /home/shubham/.config/wandb/settings
+2023-04-04 04:42:28,512 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Loading settings from /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/settings
+2023-04-04 04:42:28,513 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-04-04 04:42:28,513 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Applying setup settings: {'_disable_service': False}
+2023-04-04 04:42:28,513 INFO    MainThread:53507 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'program': '/home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py'}
+2023-04-04 04:42:28,514 INFO    MainThread:53507 [wandb_init.py:_log_setup():506] Logging user logs to /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044228-ec8m5xgz/logs/debug.log
+2023-04-04 04:42:28,514 INFO    MainThread:53507 [wandb_init.py:_log_setup():507] Logging internal logs to /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044228-ec8m5xgz/logs/debug-internal.log
+2023-04-04 04:42:28,515 INFO    MainThread:53507 [wandb_init.py:init():546] calling init triggers
+2023-04-04 04:42:28,515 INFO    MainThread:53507 [wandb_init.py:init():552] wandb.init called with sweep_config: {}
+config: {}
+2023-04-04 04:42:28,515 INFO    MainThread:53507 [wandb_init.py:init():602] starting backend
+2023-04-04 04:42:28,516 INFO    MainThread:53507 [wandb_init.py:init():606] setting up manager
+2023-04-04 04:42:28,529 INFO    MainThread:53507 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-04-04 04:42:28,539 INFO    MainThread:53507 [wandb_init.py:init():613] backend started and connected
+2023-04-04 04:42:28,548 INFO    MainThread:53507 [wandb_init.py:init():701] updated telemetry
+2023-04-04 04:42:28,568 INFO    MainThread:53507 [wandb_init.py:init():741] communicating run to backend with 60.0 second timeout
+2023-04-04 04:42:29,486 INFO    MainThread:53507 [wandb_run.py:_on_init():2133] communicating current version
+2023-04-04 04:42:29,715 INFO    MainThread:53507 [wandb_run.py:_on_init():2142] got version response 
+2023-04-04 04:42:29,715 INFO    MainThread:53507 [wandb_init.py:init():789] starting run threads in backend
+2023-04-04 04:42:37,605 INFO    MainThread:53507 [wandb_run.py:_console_start():2114] atexit reg
+2023-04-04 04:42:37,606 INFO    MainThread:53507 [wandb_run.py:_redirect():1969] redirect: SettingsConsole.WRAP_RAW
+2023-04-04 04:42:37,606 INFO    MainThread:53507 [wandb_run.py:_redirect():2034] Wrapping output streams.
+2023-04-04 04:42:37,606 INFO    MainThread:53507 [wandb_run.py:_redirect():2059] Redirects installed.
+2023-04-04 04:42:37,607 INFO    MainThread:53507 [wandb_init.py:init():831] run started, returning control to user process
+2023-04-04 04:43:37,967 WARNING MsgRouterThr:53507 [router.py:message_loop():77] message_loop has been closed

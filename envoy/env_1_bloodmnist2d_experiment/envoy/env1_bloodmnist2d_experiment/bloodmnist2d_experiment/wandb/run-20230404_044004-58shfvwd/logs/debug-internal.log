@@ -1,0 +1,55 @@
+2023-04-04 04:40:04,767 INFO    StreamThr :51642 [internal.py:wandb_internal():87] W&B internal server running at pid: 51642, started at: 2023-04-04 04:40:04.766773
+2023-04-04 04:40:04,775 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status
+2023-04-04 04:40:04,777 INFO    WriterThread:51642 [datastore.py:open_for_write():85] open: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/run-58shfvwd.wandb
+2023-04-04 04:40:04,779 DEBUG   SenderThread:51642 [sender.py:send():336] send: header
+2023-04-04 04:40:04,801 DEBUG   SenderThread:51642 [sender.py:send():336] send: run
+2023-04-04 04:40:05,794 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: check_version
+2023-04-04 04:40:05,798 INFO    SenderThread:51642 [dir_watcher.py:__init__():219] watching files in: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files
+2023-04-04 04:40:05,798 INFO    SenderThread:51642 [sender.py:_start_run_threads():1078] run started: 58shfvwd with start time 1680563404.769045
+2023-04-04 04:40:05,798 DEBUG   SenderThread:51642 [sender.py:send_request():363] send_request: summary_record
+2023-04-04 04:40:05,799 INFO    SenderThread:51642 [sender.py:_save_file():1332] saving file wandb-summary.json with policy end
+2023-04-04 04:40:05,799 DEBUG   SenderThread:51642 [sender.py:send_request():363] send_request: check_version
+2023-04-04 04:40:06,056 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: run_start
+2023-04-04 04:40:06,808 INFO    Thread-18 :51642 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files/wandb-summary.json
+2023-04-04 04:40:07,776 DEBUG   HandlerThread:51642 [system_info.py:__init__():31] System info init
+2023-04-04 04:40:07,776 DEBUG   HandlerThread:51642 [system_info.py:__init__():46] System info init done
+2023-04-04 04:40:07,776 INFO    HandlerThread:51642 [system_monitor.py:start():183] Starting system monitor
+2023-04-04 04:40:07,778 INFO    SystemMonitor:51642 [system_monitor.py:_start():147] Starting system asset monitoring threads
+2023-04-04 04:40:07,779 INFO    HandlerThread:51642 [system_monitor.py:probe():204] Collecting system info
+2023-04-04 04:40:07,780 INFO    SystemMonitor:51642 [interfaces.py:start():187] Started cpu monitoring
+2023-04-04 04:40:07,785 INFO    SystemMonitor:51642 [interfaces.py:start():187] Started disk monitoring
+2023-04-04 04:40:07,788 INFO    SystemMonitor:51642 [interfaces.py:start():187] Started gpu monitoring
+2023-04-04 04:40:07,794 INFO    SystemMonitor:51642 [interfaces.py:start():187] Started memory monitoring
+2023-04-04 04:40:07,796 INFO    SystemMonitor:51642 [interfaces.py:start():187] Started network monitoring
+2023-04-04 04:40:07,816 DEBUG   HandlerThread:51642 [system_info.py:probe():195] Probing system
+2023-04-04 04:40:07,831 DEBUG   HandlerThread:51642 [system_info.py:_probe_git():180] Probing git
+2023-04-04 04:40:07,865 DEBUG   HandlerThread:51642 [system_info.py:_probe_git():188] Probing git done
+2023-04-04 04:40:07,865 DEBUG   HandlerThread:51642 [system_info.py:probe():240] Probing system done
+2023-04-04 04:40:07,865 DEBUG   HandlerThread:51642 [system_monitor.py:probe():213] {'os': 'Linux-5.19.0-35-generic-x86_64-with-glibc2.17', 'python': '3.8.16', 'heartbeatAt': '2023-04-03T23:10:07.816981', 'startedAt': '2023-04-03T23:10:04.750466', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'codePath': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'git': {'remote': 'https://github.com/securefederatedai/openfl.git', 'commit': '58efdcc57f477f031a58ab8995fade57ca02643f'}, 'email': 'shubham.dkhema@gmail.com', 'root': '/home/shubham/Academics/Thesis/openfl', 'host': 'shubhamIsWorking', 'username': 'shubham', 'executable': '/home/shubham/anaconda3/envs/openfl/bin/python', 'cpu_count': 6, 'cpu_count_logical': 12, 'cpu_freq': {'current': 2.399833333333333, 'min': 800.0, 'max': 4100.0}, 'cpu_freq_per_core': [{'current': 2.399, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.399, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}, {'current': 2.4, 'min': 800.0, 'max': 4100.0}], 'disk': {'total': 467.8895797729492, 'used': 304.190372467041}, 'gpu': 'NVIDIA GeForce RTX 2070 with Max-Q Design', 'gpu_count': 1, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 2070 with Max-Q Design', 'memory_total': 8589934592}], 'memory': {'total': 15.424457550048828}}
+2023-04-04 04:40:07,865 INFO    HandlerThread:51642 [system_monitor.py:probe():214] Finished collecting system info
+2023-04-04 04:40:07,865 INFO    HandlerThread:51642 [system_monitor.py:probe():217] Publishing system info
+2023-04-04 04:40:07,866 DEBUG   HandlerThread:51642 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-04-04 04:40:07,867 DEBUG   HandlerThread:51642 [system_info.py:_save_pip():67] Saving pip packages done
+2023-04-04 04:40:07,868 DEBUG   HandlerThread:51642 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-04-04 04:40:08,806 INFO    Thread-18 :51642 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files/conda-environment.yaml
+2023-04-04 04:40:08,807 INFO    Thread-18 :51642 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files/requirements.txt
+2023-04-04 04:40:13,808 INFO    Thread-18 :51642 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files/conda-environment.yaml
+2023-04-04 04:40:13,918 DEBUG   HandlerThread:51642 [system_info.py:_save_conda():86] Saving conda packages done
+2023-04-04 04:40:13,920 INFO    HandlerThread:51642 [system_monitor.py:probe():219] Finished publishing system info
+2023-04-04 04:40:13,928 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 04:40:13,928 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: keepalive
+2023-04-04 04:40:13,929 DEBUG   SenderThread:51642 [sender.py:send():336] send: files
+2023-04-04 04:40:13,929 INFO    SenderThread:51642 [sender.py:_save_file():1332] saving file wandb-metadata.json with policy now
+2023-04-04 04:40:13,945 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 04:40:13,947 DEBUG   SenderThread:51642 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 04:40:14,449 DEBUG   SenderThread:51642 [sender.py:send():336] send: telemetry
+2023-04-04 04:40:14,456 DEBUG   SenderThread:51642 [sender.py:send():336] send: telemetry
+2023-04-04 04:40:14,594 DEBUG   SenderThread:51642 [sender.py:send():336] send: telemetry
+2023-04-04 04:40:14,808 INFO    Thread-18 :51642 [dir_watcher.py:_on_file_created():278] file/dir created: /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_044004-58shfvwd/files/wandb-metadata.json
+2023-04-04 04:40:15,177 INFO    wandb-upload_0:51642 [upload_job.py:push():138] Uploaded file /tmp/tmpgkb8rybhwandb/92p4em0z-wandb-metadata.json
+2023-04-04 04:40:15,595 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 04:40:20,597 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 04:40:25,598 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status_report
+2023-04-04 04:40:28,940 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: stop_status
+2023-04-04 04:40:28,942 DEBUG   SenderThread:51642 [sender.py:send_request():363] send_request: stop_status
+2023-04-04 04:40:31,493 DEBUG   HandlerThread:51642 [handler.py:handle_request():144] handle_request: status_report

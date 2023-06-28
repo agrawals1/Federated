@@ -1,0 +1,18 @@
+2023-04-04 03:48:11,271 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Configure stats pid to 43818
+2023-04-04 03:48:11,272 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Loading settings from /home/shubham/.config/wandb/settings
+2023-04-04 03:48:11,272 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Loading settings from /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/settings
+2023-04-04 03:48:11,273 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-04-04 03:48:11,273 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Applying setup settings: {'_disable_service': False}
+2023-04-04 03:48:11,273 INFO    MainThread:43818 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py', 'program': '/home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/workspace/Pytorch_MedMNIST_2D.py'}
+2023-04-04 03:48:11,274 INFO    MainThread:43818 [wandb_init.py:_log_setup():506] Logging user logs to /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_034811-4svl2te3/logs/debug.log
+2023-04-04 03:48:11,274 INFO    MainThread:43818 [wandb_init.py:_log_setup():507] Logging internal logs to /home/shubham/Academics/Thesis/openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/wandb/run-20230404_034811-4svl2te3/logs/debug-internal.log
+2023-04-04 03:48:11,275 INFO    MainThread:43818 [wandb_init.py:init():546] calling init triggers
+2023-04-04 03:48:11,275 INFO    MainThread:43818 [wandb_init.py:init():552] wandb.init called with sweep_config: {}
+config: {}
+2023-04-04 03:48:11,275 INFO    MainThread:43818 [wandb_init.py:init():602] starting backend
+2023-04-04 03:48:11,276 INFO    MainThread:43818 [wandb_init.py:init():606] setting up manager
+2023-04-04 03:48:11,288 INFO    MainThread:43818 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-04-04 03:48:11,296 INFO    MainThread:43818 [wandb_init.py:init():613] backend started and connected
+2023-04-04 03:48:11,305 INFO    MainThread:43818 [wandb_init.py:init():701] updated telemetry
+2023-04-04 03:48:11,331 INFO    MainThread:43818 [wandb_init.py:init():741] communicating run to backend with 60.0 second timeout
+2023-04-04 03:48:12,354 ERROR   MainThread:43818 [wandb_init.py:init():764] encountered error: It appears that you do not have permission to access the requested resource. Please reach out to the project owner to grant you access. If you have the correct permissions, verify that there are no issues with your networking setup.(Error 403: Forbidden)
