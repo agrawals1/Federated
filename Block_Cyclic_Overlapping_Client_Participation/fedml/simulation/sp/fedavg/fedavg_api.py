@@ -76,11 +76,21 @@ class FedAvgAPI(object):
                 )
                 self.client_list.append(c)
         logging.info("############setup_clients (END)#############")
-    def operate_ordered_dict(self, op, dict1, dict2):
+
+
+    def sub_ordered_dict(self,dict1, dict2):
         result = OrderedDict()
         for key, val in dict1.items():
-            result[key] = (val - dict2[key]) if op == "sub" else (val + dict2[key])
+            result[key] = (val - dict2[key])
         return result
+    
+    def add_ordered_dict(self, alpha1, alpha2, dict1, dict2):
+        result = OrderedDict()
+        for key, val in dict1.items():
+            result[key] = (alpha1*val + alpha2*dict2[key])
+        return result
+    
+
     def train(self):
         logging.info("self.model_trainer = {}".format(self.model_trainer))
         w_global = self.model_trainer.get_model_params()
@@ -107,7 +117,8 @@ class FedAvgAPI(object):
                     # Aggregate its local updates using the formula
                         current_model_params = client.model_trainer.get_model_params()
                         last_aggregated_model_params = client.model_trainer.get_last_aggregated_model_params()
-                        updated_state_dict = self.operate_ordered_dict("add", current_model_params, self.operate_ordered_dict("sub", w_global, last_aggregated_model_params))  
+                        globalVSlastAgg = self.sub_ordered_dict(w_global, last_aggregated_model_params)
+                        updated_state_dict = self.add_ordered_dict(0.25, 0.75, current_model_params, globalVSlastAgg)  
                         client.model_trainer.set_model_params(updated_state_dict)
                         mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
                         w = client.train(updated_state_dict)
