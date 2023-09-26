@@ -4,7 +4,8 @@ import os
 import numpy as np
 import wget
 from ...ml.engine import ml_engine_adapter
-    
+import matplotlib.pyplot as plt
+
 cwd = os.getcwd()
 
 import zipfile
@@ -30,6 +31,52 @@ def distribute_test_data(test_dataset, num_clients):
         test_partition[i] = all_indices[start_idx:end_idx]
     return test_partition
 
+def plots(stats, num_of_clients):
+    print("*********** Some stats on client data distribution **********")
+    print(f"Mean samples per client: {stats['sample per client']['std']:.2f}")
+    print()
+    print(f"Standard deviation of samples per client: {stats['sample per client']['stddev']:.2f}")
+    num_of_clients = min(10, num_of_clients)
+    samples_per_client = [v["x"] for k, v in stats.items() if k != "sample per client"]
+    client_indices = [i for i, _ in enumerate(samples_per_client)]
+    
+    plt.figure(figsize=(10,6))
+    
+    # If there are 10 or fewer clients
+    if len(samples_per_client) <= 10:
+        plt.bar(client_indices, samples_per_client, color="skyblue", edgecolor="black")
+    # If there are more than 10 clients
+    else:
+        sorted_samples_with_indices = sorted(enumerate(samples_per_client), key=lambda x: x[1])
+        top_5_indices, top_5_samples = zip(*sorted_samples_with_indices[-5:])
+        bottom_5_indices, bottom_5_samples = zip(*sorted_samples_with_indices[:5])
+        
+        plt.bar(top_5_indices, top_5_samples, color="green", label="Top 5 clients (most samples)", edgecolor="black")
+        plt.bar(bottom_5_indices, bottom_5_samples, color="red", label="Bottom 5 clients (least samples)", edgecolor="black")
+        plt.legend()
+
+    plt.title("Frequency plot of samples per client")
+    plt.xlabel("Client Index")
+    plt.ylabel("Number of samples")
+    plt.grid(True, which='both', linestyle="--", linewidth=0.5)
+    plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/samples_per_client_histogram.png")  # Save the plot
+    plt.close()  # Close the plot
+
+    plt.figure(figsize=(12,6))
+    for i in range(num_of_clients):
+        class_count = stats[i]["y"]
+        labels = list(class_count.keys())
+        counts = list(class_count.values())
+        plt.subplot(1, num_of_clients, i+1)
+        plt.bar(labels, counts, color="skyblue", edgecolor="black")
+        plt.title(f"Client {i} Class Distribution")
+        plt.xlabel("Class Label")
+        plt.ylabel("Number of Samples")
+        plt.grid(True, which="both", linestyle="--", linewidth="0.5")
+    plt.tight_layout()
+    plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/class_distribution_per_client.png")  # Save the plot
+    plt.close()  # Close the plot
+    
 def dirichlet(
     dataset: Dataset, client_num: int, alpha: float, least_samples: int
 ) -> Tuple[Dict, Dict]:
@@ -179,11 +226,12 @@ def read_data_dirichlet(alpha, num_clients=7):
     train_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=True, transform=transform, download=True)
     test_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=False, transform=transform, download=True)
     all_train_x = [img.flatten().numpy().tolist() for img,_ in train_dataset]
-    all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
+    # all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
     all_train_y = [label for _, label in train_dataset]
-    all_test_y = [label for _, label in test_dataset]
+    # all_test_y = [label for _, label in test_dataset]
     # Splitting data using Dirichlet distribution
     train_client_idcs, stats = dirichlet(train_dataset, num_clients, alpha, 2500)
+    plots(stats, num_clients)
     # test_client_idcs = dirichlet(np.arange(len(all_test_y)), np.array(all_test_y), alpha, num_clients)
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
     
@@ -208,13 +256,6 @@ def read_data_dirichlet(alpha, num_clients=7):
             client_data_y.append(all_train_y[i])
     
         test_data[client_idx] = {"x": client_data_x, "y": client_data_y}
-
-
-
-    # train_data = {client_idx: {"x": [all_train_x[i] for i in idcs], "y": [all_train_y[i] for i in idcs]} 
-    #               for client_idx, idcs in train_client_idcs.items()}
-    # test_data = {client_idx: {"x": [all_test_x[i] for i in idcs], "y": [all_test_y[i] for i in idcs]} 
-    #              for client_idx, idcs in test_client_idcs.items()}
 
     clients = list(range(num_clients))
     groups = []

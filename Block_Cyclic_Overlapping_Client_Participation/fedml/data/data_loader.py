@@ -274,10 +274,7 @@ def load_synthetic_data(args):
             class_num,
         ) = load_partition_data_mnist(
             args,
-            args.batch_size
-            # train_path=os.path.join(args.data_cache_dir, "MNIST", "train"),
-            # test_path=os.path.join(args.data_cache_dir, "MNIST", "test"),
-        )
+            args.batch_size)
         """
         For shallow NN or linear models, 
         we uniformly sample a fraction of clients each round (as the original FedAvg paper)

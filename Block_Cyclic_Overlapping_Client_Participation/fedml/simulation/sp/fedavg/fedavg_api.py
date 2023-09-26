@@ -9,7 +9,7 @@ import wandb
 from fedml import mlops
 from fedml.ml.trainer.trainer_creator import create_model_trainer
 from .client import Client
-
+from collections import OrderedDict
 
 class FedAvgAPI(object):
     def __init__(self, args, device, dataset, model):
@@ -43,7 +43,7 @@ class FedAvgAPI(object):
         logging.info("self.model_trainer = {}".format(self.model_trainer))
 
         self._setup_clients(
-            train_data_local_num_dict, train_data_local_dict, test_data_local_dict, self.model_trainer,
+            train_data_local_num_dict, train_data_local_dict, test_data_local_dict, copy.deepcopy(self.model_trainer),
         )
 
     def _setup_clients(
@@ -76,7 +76,11 @@ class FedAvgAPI(object):
                 )
                 self.client_list.append(c)
         logging.info("############setup_clients (END)#############")
-
+    def operate_ordered_dict(self, op, dict1, dict2):
+        result = OrderedDict()
+        for key, val in dict1.items():
+            result[key] = (val - dict2[key]) if op == "sub" else (val + dict2[key])
+        return result
     def train(self):
         logging.info("self.model_trainer = {}".format(self.model_trainer))
         w_global = self.model_trainer.get_model_params()
@@ -97,23 +101,39 @@ class FedAvgAPI(object):
                 round_idx, self.args.client_num_in_total
             )
             logging.info("client_indexes = " + str(client_indexes))
+            if self.args.active:
+                for idx, client in enumerate(self.client_list):
+                    if idx in client_indexes:
+                    # Aggregate its local updates using the formula
+                        current_model_params = client.model_trainer.get_model_params()
+                        last_aggregated_model_params = client.model_trainer.get_last_aggregated_model_params()
+                        updated_state_dict = self.operate_ordered_dict("add", current_model_params, self.operate_ordered_dict("sub", w_global, last_aggregated_model_params))  
+                        client.model_trainer.set_model_params(updated_state_dict)
+                        mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
+                        w = client.train(updated_state_dict)
+                        client.model_trainer.set_last_aggregated_model_params(copy.deepcopy(w)) 
+                        mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
+                        # self.logging.info("local weights = " + str(w))
+                        w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+                    else:
+                        w = client.train(client.model_trainer.get_model_params())          
+            else:
+                for idx, client in enumerate(self.client_list):
+                    # update dataset
+                    client_idx = client_indexes[idx]
+                    client.update_local_dataset(
+                        client_idx,
+                        self.train_data_local_dict[client_idx],
+                        self.test_data_local_dict[client_idx],
+                        self.train_data_local_num_dict[client_idx],
+                    )
 
-            for idx, client in enumerate(self.client_list):
-                # update dataset
-                client_idx = client_indexes[idx]
-                client.update_local_dataset(
-                    client_idx,
-                    self.train_data_local_dict[client_idx],
-                    self.test_data_local_dict[client_idx],
-                    self.train_data_local_num_dict[client_idx],
-                )
-
-                # train on new dataset
-                mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
-                w = client.train(copy.deepcopy(w_global))
-                mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
-                # self.logging.info("local weights = " + str(w))
-                w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+                    # train on new dataset
+                    mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
+                    w = client.train(copy.deepcopy(w_global))
+                    mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
+                    # self.logging.info("local weights = " + str(w))
+                    w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
 
             # update global weights
             mlops.event("agg", event_started=True, event_value=str(round_idx))
@@ -125,6 +145,7 @@ class FedAvgAPI(object):
             # test results
             # at last round
             if round_idx == self.args.comm_round - 1:
+                self._test_global_model_on_global_data(w_global)
                 self._local_test_on_all_clients(round_idx)
             # per {frequency_of_the_test} round
             elif round_idx % self.args.frequency_of_the_test == 0:
@@ -132,6 +153,7 @@ class FedAvgAPI(object):
                     self._local_test_on_validation_set(round_idx)
                 else:
                     self._local_test_on_all_clients(round_idx)
+                    self._test_global_model_on_global_data(w_global)
 
             mlops.log_round_info(self.args.comm_round, round_idx)
 
@@ -148,8 +170,8 @@ class FedAvgAPI(object):
         logging.info("client_indexes = %s" % str(client_indexes))
         return client_indexes
     def client_sampling_cyclic(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.client_num_per_round - 1)) % client_num_in_total
-        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.client_num_per_round)]
+        start_idx = (round_idx * (self.args.client_num_per_round - 1)) % client_num_in_total
+        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
         return client_indexes
 
     def _generate_validation_set(self, num_samples=10000):
@@ -190,6 +212,25 @@ class FedAvgAPI(object):
                 temp_w.append(local_w[k])
             averaged_params[k] = sum(temp_w) / len(temp_w)
         return averaged_params
+
+    def _test_global_model_on_global_data(self, w_global):
+        logging.info("################test_global_model_on_global_dataset################")
+        self.model_trainer.set_model_params(w_global)
+        metrics_test = self.model_trainer.test(self.test_global, self.device, self.args)
+        metrics_train = self.model_trainer.test(self.train_global, self.device, self.args)
+        test_acc = metrics_test["test_correct"] / metrics_test["test_total"]
+        test_loss = metrics_test["test_loss"]
+        train_acc = metrics_train["test_correct"] / metrics_train["test_total"]
+        train_loss = metrics_train["test_loss"]
+        stats = {"test_acc": test_acc, "test_loss":test_loss, "train_acc":train_acc, "train_loss":train_loss}
+        logging.info(stats)
+        if self.args.enable_wandb:
+            wandb.log({"Global Test Acc": test_acc})
+            wandb.log({"Global Test Loss": test_loss})
+            wandb.log({"Global Train Acc": train_acc})
+            wandb.log({"Global Train Loss": train_loss})
+        
+
 
     def _local_test_on_all_clients(self, round_idx):
 
