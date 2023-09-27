@@ -226,13 +226,14 @@ def read_data_dirichlet(alpha, num_clients=7):
     train_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=True, transform=transform, download=True)
     test_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=False, transform=transform, download=True)
     all_train_x = [img.flatten().numpy().tolist() for img,_ in train_dataset]
-    # all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
+    all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
     all_train_y = [label for _, label in train_dataset]
-    # all_test_y = [label for _, label in test_dataset]
+    all_test_y = [label for _, label in test_dataset]
     # Splitting data using Dirichlet distribution
     train_client_idcs, stats = dirichlet(train_dataset, num_clients, alpha, 2500)
     plots(stats, num_clients)
     # test_client_idcs = dirichlet(np.arange(len(all_test_y)), np.array(all_test_y), alpha, num_clients)
+    # uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
     
     train_data = {}
@@ -252,8 +253,8 @@ def read_data_dirichlet(alpha, num_clients=7):
         client_data_y = []
     
         for i in idcs:
-            client_data_x.append(all_train_x[i])
-            client_data_y.append(all_train_y[i])
+            client_data_x.append(all_test_x[i])
+            client_data_y.append(all_test_y[i])
     
         test_data[client_idx] = {"x": client_data_x, "y": client_data_y}
 

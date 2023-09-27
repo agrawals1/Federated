@@ -5,7 +5,8 @@ common_args:
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_COCP
-  active: 1
+  active: 0
+  var_epoch: 0
 
 data_args:
   dataset: "mnist"
@@ -21,12 +22,13 @@ train_args:
   client_id_list: "[]"
   client_num_in_total: 7
   client_num_per_round: 3
-  comm_round: 10 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
-  epochs: 3
+  comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
+  epochs: 1
   batch_size: 10
   client_optimizer: sgd
   learning_rate: 0.03
   weight_decay: 0.001
+  momentum: 0.9
 
 validation_args:
   frequency_of_the_test: 2
@@ -45,5 +47,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Client Participation in Federated Setting
-  run_name: fedml_COCP
+  run_name: testing_reset
   using_mlops: false

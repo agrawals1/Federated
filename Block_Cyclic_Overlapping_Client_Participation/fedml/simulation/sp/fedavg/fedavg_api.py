@@ -38,7 +38,7 @@ class FedAvgAPI(object):
         self.test_data_local_dict = test_data_local_dict
 
         logging.info("model = {}".format(model))
-        self.model_trainer = create_model_trainer(model,model,args)
+        self.model_trainer = create_model_trainer(model,copy.deepcopy(model),args)
         self.model = model
         logging.info("self.model_trainer = {}".format(self.model_trainer))
 
@@ -84,10 +84,10 @@ class FedAvgAPI(object):
             result[key] = (val - dict2[key])
         return result
     
-    def add_ordered_dict(self, alpha1, alpha2, dict1, dict2):
+    def add_ordered_dict(self, alpha, dict1, dict2):
         result = OrderedDict()
         for key, val in dict1.items():
-            result[key] = (alpha1*val + alpha2*dict2[key])
+            result[key] = (val + alpha*dict2[key])
         return result
     
 
@@ -107,7 +107,7 @@ class FedAvgAPI(object):
             for scalability: following the original FedAvg algorithm, we uniformly sample a fraction of clients in each round.
             Instead of changing the 'Client' instances, our implementation keeps the 'Client' instances and then updates their local dataset 
             """
-            client_indexes = self.client_sampling_cyclic(
+            client_indexes = self._client_sampling(
                 round_idx, self.args.client_num_in_total
             )
             logging.info("client_indexes = " + str(client_indexes))
@@ -118,16 +118,16 @@ class FedAvgAPI(object):
                         current_model_params = client.model_trainer.get_model_params()
                         last_aggregated_model_params = client.model_trainer.get_last_aggregated_model_params()
                         globalVSlastAgg = self.sub_ordered_dict(w_global, last_aggregated_model_params)
-                        updated_state_dict = self.add_ordered_dict(0.25, 0.75, current_model_params, globalVSlastAgg)  
+                        updated_state_dict = self.add_ordered_dict(1.0, current_model_params, globalVSlastAgg)  
                         client.model_trainer.set_model_params(updated_state_dict)
                         mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
-                        w = client.train(updated_state_dict)
+                        w = client.train()
                         client.model_trainer.set_last_aggregated_model_params(copy.deepcopy(w)) 
                         mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
                         # self.logging.info("local weights = " + str(w))
                         w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
                     else:
-                        w = client.train(client.model_trainer.get_model_params())          
+                        w = client.train()          
             else:
                 for idx, client in enumerate(self.client_list):
                     # update dataset
@@ -141,7 +141,7 @@ class FedAvgAPI(object):
 
                     # train on new dataset
                     mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
-                    w = client.train(copy.deepcopy(w_global))
+                    w = client.train()
                     mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
                     # self.logging.info("local weights = " + str(w))
                     w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
@@ -156,8 +156,8 @@ class FedAvgAPI(object):
             # test results
             # at last round
             if round_idx == self.args.comm_round - 1:
-                self._test_global_model_on_global_data(w_global)
                 self._local_test_on_all_clients(round_idx)
+                self._test_global_model_on_global_data(w_global)
             # per {frequency_of_the_test} round
             elif round_idx % self.args.frequency_of_the_test == 0:
                 if self.args.dataset.startswith("stackoverflow"):
@@ -171,17 +171,22 @@ class FedAvgAPI(object):
         mlops.log_training_finished_status()
         mlops.log_aggregation_finished_status()
 
-    def _client_sampling(self, round_idx, client_num_in_total, client_num_per_round):
-        if client_num_in_total == client_num_per_round:
+    def _client_sampling(self, round_idx, client_num_in_total):
+        if client_num_in_total == self.args.client_num_per_round:
             client_indexes = [client_index for client_index in range(client_num_in_total)]
         else:
-            num_clients = min(client_num_per_round, client_num_in_total)
+            num_clients = min(self.args.client_num_per_round, client_num_in_total)
             np.random.seed(round_idx)  # make sure for each comparison, we are selecting the same clients each round
             client_indexes = np.random.choice(range(client_num_in_total), num_clients, replace=False)
         logging.info("client_indexes = %s" % str(client_indexes))
         return client_indexes
     def client_sampling_cyclic(self, round_idx, client_num_in_total):
         start_idx = (round_idx * (self.args.client_num_per_round - 1)) % client_num_in_total
+        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
+        return client_indexes
+    
+    def client_sampling_cyclic_noOverlap(self, round_idx, client_num_in_total):
+        start_idx = (round_idx * (self.args.client_num_per_round)) % client_num_in_total
         client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
         return client_indexes
 
@@ -230,9 +235,9 @@ class FedAvgAPI(object):
         metrics_test = self.model_trainer.test(self.test_global, self.device, self.args)
         metrics_train = self.model_trainer.test(self.train_global, self.device, self.args)
         test_acc = metrics_test["test_correct"] / metrics_test["test_total"]
-        test_loss = metrics_test["test_loss"]
+        test_loss = metrics_test["test_loss"] / metrics_test["test_total"]
         train_acc = metrics_train["test_correct"] / metrics_train["test_total"]
-        train_loss = metrics_train["test_loss"]
+        train_loss = metrics_train["test_loss"] / metrics_train["test_total"]
         stats = {"test_acc": test_acc, "test_loss":test_loss, "train_acc":train_acc, "train_loss":train_loss}
         logging.info(stats)
         if self.args.enable_wandb:
@@ -243,66 +248,139 @@ class FedAvgAPI(object):
         
 
 
+    # def _local_test_on_all_clients(self, round_idx):
+
+    #     logging.info("################local_test_on_all_clients : {}".format(round_idx))
+
+    #     train_metrics = {"num_samples": [], "num_correct": [], "losses": []}
+
+    #     test_metrics = {"num_samples": [], "num_correct": [], "losses": []}
+        
+    #     if self.args.active:
+    #         for client in self.client_list:
+    #             # train data
+    #             train_local_metrics = client.local_test(False)
+    #             train_metrics["num_samples"].append(copy.deepcopy(train_local_metrics["test_total"]))
+    #             train_metrics["num_correct"].append(copy.deepcopy(train_local_metrics["test_correct"]))
+    #             train_metrics["losses"].append(copy.deepcopy(train_local_metrics["test_loss"]))
+
+    #             # test data
+    #             test_local_metrics = client.local_test(True)
+    #             test_metrics["num_samples"].append(copy.deepcopy(test_local_metrics["test_total"]))
+    #             test_metrics["num_correct"].append(copy.deepcopy(test_local_metrics["test_correct"]))
+    #             test_metrics["losses"].append(copy.deepcopy(test_local_metrics["test_loss"]))
+    #     else:
+    #         client = self.client_list[0]
+    #         for client_idx in range(self.args.client_num_in_total):
+    #             """
+    #             Note: for datasets like "fed_CIFAR100" and "fed_shakespheare",
+    #             the training client number is larger than the testing client number
+    #             """
+    #             if self.test_data_local_dict[client_idx] is None:
+    #                 continue
+    #             client.update_local_dataset(
+    #                 0,
+    #                 self.train_data_local_dict[client_idx],
+    #                 self.test_data_local_dict[client_idx],
+    #                 self.train_data_local_num_dict[client_idx],
+    #             )
+    #             # train data
+    #             train_local_metrics = client.local_test(False)
+    #             train_metrics["num_samples"].append(copy.deepcopy(train_local_metrics["test_total"]))
+    #             train_metrics["num_correct"].append(copy.deepcopy(train_local_metrics["test_correct"]))
+    #             train_metrics["losses"].append(copy.deepcopy(train_local_metrics["test_loss"]))
+
+    #             # test data
+    #             test_local_metrics = client.local_test(True)
+    #             test_metrics["num_samples"].append(copy.deepcopy(test_local_metrics["test_total"]))
+    #             test_metrics["num_correct"].append(copy.deepcopy(test_local_metrics["test_correct"]))
+    #             test_metrics["losses"].append(copy.deepcopy(test_local_metrics["test_loss"]))
+
+    #     # test on training dataset
+    #     train_acc = sum(train_metrics["num_correct"]) / sum(train_metrics["num_samples"])
+    #     train_loss = sum(train_metrics["losses"]) / sum(train_metrics["num_samples"])
+
+    #     # test on test dataset
+    #     test_acc = sum(test_metrics["num_correct"]) / sum(test_metrics["num_samples"])
+    #     test_loss = sum(test_metrics["losses"]) / sum(test_metrics["num_samples"])
+
+    #     stats = {"training_acc": train_acc, "training_loss": train_loss}
+    #     if self.args.enable_wandb:
+    #         wandb.log({"Train/Acc": train_acc, "round": round_idx})
+    #         wandb.log({"Train/Loss": train_loss, "round": round_idx})
+
+    #     mlops.log({"Train/Acc": train_acc, "round": round_idx})
+    #     mlops.log({"Train/Loss": train_loss, "round": round_idx})
+    #     logging.info(stats)
+
+    #     stats = {"test_acc": test_acc, "test_loss": test_loss}
+    #     if self.args.enable_wandb:
+    #         wandb.log({"Test/Acc": test_acc, "round": round_idx})
+    #         wandb.log({"Test/Loss": test_loss, "round": round_idx})
+
+    #     mlops.log({"Test/Acc": test_acc, "round": round_idx})
+    #     mlops.log({"Test/Loss": test_loss, "round": round_idx})
+    #     logging.info(stats)
+
     def _local_test_on_all_clients(self, round_idx):
 
         logging.info("################local_test_on_all_clients : {}".format(round_idx))
 
         train_metrics = {"num_samples": [], "num_correct": [], "losses": []}
-
         test_metrics = {"num_samples": [], "num_correct": [], "losses": []}
 
-        client = self.client_list[0]
+        # Define a nested function to handle the metrics collection to avoid redundancy
+        def collect_metrics(client, dataset_type):
+            metrics = client.local_test(dataset_type)
+            return metrics["test_total"], metrics["test_correct"], metrics["test_loss"]
 
-        for client_idx in range(self.args.client_num_in_total):
-            """
-            Note: for datasets like "fed_CIFAR100" and "fed_shakespheare",
-            the training client number is larger than the testing client number
-            """
-            if self.test_data_local_dict[client_idx] is None:
+        if self.args.active:
+            clients_to_test = self.client_list
+        else:
+            clients_to_test = [self.client_list[0] for _ in range(self.args.client_num_in_total)]
+
+        for idx, client in enumerate(clients_to_test):
+            if not self.args.active and self.test_data_local_dict[idx] is None:
                 continue
-            client.update_local_dataset(
-                0,
-                self.train_data_local_dict[client_idx],
-                self.test_data_local_dict[client_idx],
-                self.train_data_local_num_dict[client_idx],
-            )
-            # train data
-            train_local_metrics = client.local_test(False)
-            train_metrics["num_samples"].append(copy.deepcopy(train_local_metrics["test_total"]))
-            train_metrics["num_correct"].append(copy.deepcopy(train_local_metrics["test_correct"]))
-            train_metrics["losses"].append(copy.deepcopy(train_local_metrics["test_loss"]))
 
-            # test data
-            test_local_metrics = client.local_test(True)
-            test_metrics["num_samples"].append(copy.deepcopy(test_local_metrics["test_total"]))
-            test_metrics["num_correct"].append(copy.deepcopy(test_local_metrics["test_correct"]))
-            test_metrics["losses"].append(copy.deepcopy(test_local_metrics["test_loss"]))
+            if not self.args.active:
+                client.update_local_dataset(
+                    0,
+                    self.train_data_local_dict[idx],
+                    self.test_data_local_dict[idx],
+                    self.train_data_local_num_dict[idx],
+                )
 
-        # test on training dataset
-        train_acc = sum(train_metrics["num_correct"]) / sum(train_metrics["num_samples"])
-        train_loss = sum(train_metrics["losses"]) / sum(train_metrics["num_samples"])
+            train_samples, train_correct, train_loss = collect_metrics(client, False)
+            test_samples, test_correct, test_loss = collect_metrics(client, True)
 
-        # test on test dataset
-        test_acc = sum(test_metrics["num_correct"]) / sum(test_metrics["num_samples"])
-        test_loss = sum(test_metrics["losses"]) / sum(test_metrics["num_samples"])
+            train_metrics["num_samples"].append(train_samples)
+            train_metrics["num_correct"].append(train_correct)
+            train_metrics["losses"].append(train_loss)
 
-        stats = {"training_acc": train_acc, "training_loss": train_loss}
-        if self.args.enable_wandb:
-            wandb.log({"Train/Acc": train_acc, "round": round_idx})
-            wandb.log({"Train/Loss": train_loss, "round": round_idx})
+            test_metrics["num_samples"].append(test_samples)
+            test_metrics["num_correct"].append(test_correct)
+            test_metrics["losses"].append(test_loss)
 
-        mlops.log({"Train/Acc": train_acc, "round": round_idx})
-        mlops.log({"Train/Loss": train_loss, "round": round_idx})
-        logging.info(stats)
+        # Compute aggregated metrics
+        def compute_aggregated_metrics(metrics):
+            return sum(metrics["num_correct"]) / sum(metrics["num_samples"]), sum(metrics["losses"]) / sum(metrics["num_samples"])
 
-        stats = {"test_acc": test_acc, "test_loss": test_loss}
-        if self.args.enable_wandb:
-            wandb.log({"Test/Acc": test_acc, "round": round_idx})
-            wandb.log({"Test/Loss": test_loss, "round": round_idx})
+        train_acc, train_loss = compute_aggregated_metrics(train_metrics)
+        test_acc, test_loss = compute_aggregated_metrics(test_metrics)
 
-        mlops.log({"Test/Acc": test_acc, "round": round_idx})
-        mlops.log({"Test/Loss": test_loss, "round": round_idx})
-        logging.info(stats)
+        # Log metrics
+        def log_metrics(prefix, acc, loss):
+            if self.args.enable_wandb:
+                wandb.log({f"{prefix}/Acc": acc, "round": round_idx})
+                wandb.log({f"{prefix}/Loss": loss, "round": round_idx})
+            mlops.log({f"{prefix}/Acc": acc, "round": round_idx})
+            mlops.log({f"{prefix}/Loss": loss, "round": round_idx})
+            logging.info({f"{prefix}_acc": acc, f"{prefix}_loss": loss})
+
+        log_metrics("Train", train_acc, train_loss)
+        log_metrics("Test", test_acc, test_loss)
+
 
     def _local_test_on_validation_set(self, round_idx):
 
