@@ -107,7 +107,7 @@ class FedAvgAPI(object):
             for scalability: following the original FedAvg algorithm, we uniformly sample a fraction of clients in each round.
             Instead of changing the 'Client' instances, our implementation keeps the 'Client' instances and then updates their local dataset 
             """
-            client_indexes = self._client_sampling(
+            client_indexes = self.client_sampling_cyclic_noOverlap_pattern(
                 round_idx, self.args.client_num_in_total
             )
             logging.info("client_indexes = " + str(client_indexes))
