@@ -118,7 +118,7 @@ class FedAvgAPI(object):
                         current_model_params = client.model_trainer.get_model_params()
                         last_aggregated_model_params = client.model_trainer.get_last_aggregated_model_params()
                         globalVSlastAgg = self.sub_ordered_dict(w_global, last_aggregated_model_params)
-                        updated_state_dict = self.add_ordered_dict(1.0, current_model_params, globalVSlastAgg)  
+                        updated_state_dict = self.add_ordered_dict(self.args.alpha_active, current_model_params, globalVSlastAgg)  
                         client.model_trainer.set_model_params(updated_state_dict)
                         mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
                         w = client.train()

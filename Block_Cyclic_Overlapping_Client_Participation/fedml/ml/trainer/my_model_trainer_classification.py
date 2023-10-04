@@ -36,12 +36,12 @@ class ModelTrainerCLS(ClientTrainer):
         if args.client_optimizer == "sgd":
             optimizer = torch.optim.SGD(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
-                lr=args.learning_rate,
+                lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay
             )
            
         elif args.client_optimizer == "CosAnnealing":
             optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=args.learning_rate, momentum=args.momentum)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=1e-4)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=0)
         
         else:
             optimizer = torch.optim.Adam(

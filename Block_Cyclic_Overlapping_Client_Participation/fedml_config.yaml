@@ -8,7 +8,8 @@ common_args:
   active: 0
   var_epoch: 0
   overlap_percentage: 0.2
-  
+  alpha_dirichlet: 10000
+  alpha_active: 1.0
 
 data_args:
   dataset: "cifar10"
@@ -24,19 +25,19 @@ model_args:
 train_args:
   federated_optimizer: "FedAvg"
   client_id_list: "[]"
-  client_num_in_total: 15
-  client_num_per_round: 15
+  client_num_in_total: 12
+  client_num_per_round: 12
   num_groups: 3
-  comm_round: 10 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
-  epochs: 5
+  comm_round: 20 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
+  epochs: 10
   batch_size: 128
   client_optimizer: adam
-  learning_rate: .001
-  weight_decay: .0001
+  learning_rate: .00001
+  weight_decay: 0.0
   momentum: 0.9
 
 validation_args:
-  frequency_of_the_test: 2
+  frequency_of_the_test: 1
 
 device_args:
   using_gpu: true
@@ -52,5 +53,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Client Participation in Federated Setting
-  run_name: random_sampling_E3_R30_adam_resnet18_cifar10_homogenious_ALlParticipate
+  run_name: randsamp_E10_R20_LRe-4_DEC0_adam_rsnt18_cfar10_homo_ALlPart
   using_mlops: false

@@ -434,7 +434,7 @@ def load_partition_data_mnist_by_device_id(batch_size, device_id, train_path="MN
 def load_partition_data_mnist(
     args, batch_size
 ):
-    users, groups, train_data, test_data = read_data_dirichlet(10000,num_clients=args.client_num_in_total, pytorch_dataset = args.dataset)
+    users, groups, train_data, test_data = read_data_dirichlet(args.alpha_dirichlet,num_clients=args.client_num_in_total, pytorch_dataset = args.dataset)
 
     if len(groups) == 0:
         groups = [None for _ in users]
