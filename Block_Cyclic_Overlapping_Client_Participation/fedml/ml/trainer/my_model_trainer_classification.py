@@ -27,30 +27,22 @@ class ModelTrainerCLS(ClientTrainer):
 
     def train(self, train_data, device, args):
         model = self.model
-
         model.to(device)
         model.train()
         num_epochs = args.epochs if args.var_epoch == 0 else random.randint(1,5)
         # train and update
         criterion = nn.CrossEntropyLoss().to(device)  # pylint: disable=E1102
-        def scheduler_step(scheduler):
-            scheduler.step()
-
-        def optimizer_step(optimizer):
-            optimizer.step()
-
+        
         if args.client_optimizer == "sgd":
             optimizer = torch.optim.SGD(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
                 lr=args.learning_rate,
             )
-            step_fun = optimizer_step
-            step_var = optimizer
+           
         elif args.client_optimizer == "CosAnnealing":
             optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=args.learning_rate, momentum=args.momentum)
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=1e-4)
-            step_fun = scheduler_step
-            step_var = scheduler
+        
         else:
             optimizer = torch.optim.Adam(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
@@ -58,11 +50,6 @@ class ModelTrainerCLS(ClientTrainer):
                 weight_decay=args.weight_decay,
                 amsgrad=True,
             )
-            step_fun = optimizer_step
-            step_var = optimizer
-
-        
-        
         epoch_loss = []
         for epoch in range(num_epochs):
             batch_loss = []
@@ -74,11 +61,12 @@ class ModelTrainerCLS(ClientTrainer):
                 labels = labels.long()
                 loss = criterion(log_probs, labels)  # pylint: disable=E1102
                 loss.backward()
-                step_fun(step_var)
 
                 # Uncommet this following line to avoid nan loss
-                # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                optimizer.step()
+                if args.client_optimizer == "CosAnnealing":
+                    scheduler.step()
                 # logging.info(
                 #     "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
                 #         epoch,
