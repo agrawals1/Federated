@@ -200,7 +200,7 @@ def distribute_classes(num_clients, total_classes):
 
 
 
-def read_data_dirichlet(alpha, num_clients=7):
+def read_data_dirichlet(alpha, pytorch_dataset, num_clients=7):
     """
     Reads and processes heterogeneous training and testing data for a given number of clients using Dirichlet distribution.
 
@@ -222,15 +222,27 @@ def read_data_dirichlet(alpha, num_clients=7):
     - The function assumes that the training and testing data are saved in .json format and each file's content has a 
       key named "user_data".
     """
+    
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=True, transform=transform, download=True)
-    test_dataset = datasets.MNIST(root="./home/shubham/fed_data", train=False, transform=transform, download=True)
-    all_train_x = [img.flatten().numpy().tolist() for img,_ in train_dataset]
-    all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
-    all_train_y = [label for _, label in train_dataset]
-    all_test_y = [label for _, label in test_dataset]
+    if pytorch_dataset == "mnist":
+        train_dataset = datasets.MNIST(root="./home/shubham/fed_data/MNIST", train=True, transform=transform, download=True)
+        test_dataset = datasets.MNIST(root="./home/shubham/fed_data/MNIST", train=False, transform=transform, download=True)
+        all_train_x = [img.flatten().numpy().tolist() for img,_ in train_dataset]
+        all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
+        all_train_y = [label for _, label in train_dataset]
+        all_test_y = [label for _, label in test_dataset]
+    elif pytorch_dataset == "fashionMnist" :
+        train_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=True, transform=transform, download=True)
+        test_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=False, transform=transform, download=True)
+    else:
+        train_dataset = datasets.CIFAR10(root="./home/shubham/fed_data/CIFAR", train=True, transform=transform, download=True)
+        test_dataset = datasets.CIFAR10(root="./home/shubham/fed_data/CIFAR", train=False, transform=transform, download=True)
+        all_train_x = [img.numpy().tolist() for img,_ in train_dataset]
+        all_test_x = [img.numpy().tolist() for img,_ in test_dataset]
+        all_train_y = [label for _, label in train_dataset]
+        all_test_y = [label for _, label in test_dataset]
     # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet(train_dataset, num_clients, alpha, 2500)
+    train_client_idcs, stats = dirichlet(train_dataset, num_clients, alpha, len(all_train_y)//(5*num_clients))
     plots(stats, num_clients)
     # test_client_idcs = dirichlet(np.arange(len(all_test_y)), np.array(all_test_y), alpha, num_clients)
     # uniform distribution of test data
@@ -422,7 +434,7 @@ def load_partition_data_mnist_by_device_id(batch_size, device_id, train_path="MN
 def load_partition_data_mnist(
     args, batch_size
 ):
-    users, groups, train_data, test_data = read_data_dirichlet(1.0,num_clients=args.client_num_in_total)
+    users, groups, train_data, test_data = read_data_dirichlet(10000,num_clients=args.client_num_in_total, pytorch_dataset = args.dataset)
 
     if len(groups) == 0:
         groups = [None for _ in users]
@@ -445,7 +457,7 @@ def load_partition_data_mnist(
         # transform to batches
         train_batch = batch_data(args, train_data[u], batch_size)
         test_batch = batch_data(args, test_data[u], batch_size)
-
+        
         # index using client index
         train_data_local_dict[client_idx] = train_batch
         test_data_local_dict[client_idx] = test_batch

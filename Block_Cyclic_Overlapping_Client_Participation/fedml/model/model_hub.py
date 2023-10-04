@@ -11,6 +11,7 @@ from fedml.model.cv.mobilenet_v3 import MobileNetV3
 from fedml.model.cv.resnet import resnet56
 from fedml.model.cv.resnet56 import resnet_client, resnet_server
 from fedml.model.cv.resnet_gn import resnet18
+# from fedml.model.cv.resnet_gn import resnet20
 from fedml.model.linear.lr import LogisticRegression
 from fedml.model.linear.lr_cifar10 import LogisticRegression_Cifar10
 from fedml.model.nlp.rnn import RNN_OriginalFedAvg, RNN_StackOverFlow, RNN_FedShakespeare
@@ -23,18 +24,24 @@ def create(args, output_dim):
     if model_name == "lr" and args.dataset == "mnist":
         logging.info("LogisticRegression + MNIST")
         model = LogisticRegression(28 * 28, output_dim)
-    elif model_name == "cnn_web" and args.dataset == "cifar10":
-        logging.info("CNN_WEB + CIFAR10")
-        model = CNN_WEB()
+    elif model_name == "resnet_18" and args.dataset == "cifar10":
+        logging.info("RESNET_18 + CIFAR10")
+        model = resnet18(num_classes = 10)
     elif model_name == "lr" and args.dataset == "cifar10":
         logging.info("LogisticRegression + CIFAR10")
         model = LogisticRegression_Cifar10(32 * 32 * 3, output_dim)
     elif model_name == "cnn" and args.dataset == "mnist":
         logging.info("CNN + MNIST")
-        model = CNN_DropOut(False)
+        model = CNN_DropOut(True)
     elif model_name == "cnn" and args.dataset == "femnist":
         logging.info("CNN + FederatedEMNIST")
         model = CNN_DropOut(False)
+    elif model_name == "cnn" and args.dataset == "fashionMnist":
+        logging.info("CNN + FederatedfashionMnist")
+        model = CNN_DropOut(False)
+    # elif model_name == "cnn" and args.dataset == "cifar10":
+    #     logging.info("CNN + Federated_CIFAR10")
+    #     model = CNN_WEB()
     elif model_name == "resnet18_gn" and args.dataset == "fed_cifar100":
         logging.info("ResNet18_GN + Federated_CIFAR100")
         model = resnet18()

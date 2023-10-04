@@ -259,7 +259,7 @@ def load_synthetic_data(args):
     else:
         full_batch = False
 
-    if dataset_name == "mnist":
+    if dataset_name == "mnist" or dataset_name == "cifar10" or dataset_name == "fashionMnist":
         # download_mnist(args.data_cache_dir)
         logging.info("load_data. dataset_name = %s" % dataset_name)
         (
