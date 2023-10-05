@@ -7,7 +7,7 @@ common_args:
   mlops_run_name: fedml_torch_fedavg_COCP
   active: 0
   var_epoch: 0
-  overlap_percentage: 0.2
+  overlap_percentage: 0.4
   alpha_dirichlet: 1.0
   alpha_active: 1.0
 
@@ -27,14 +27,15 @@ train_args:
   client_id_list: "[]"
   client_num_in_total: 100
   client_num_per_round: 10
-  num_groups: 3
+  num_groups: 5
   comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
   epochs: 4
-  batch_size: 129
+  batch_size: 100
   client_optimizer: CosAnnealing
   learning_rate: .1
   weight_decay: 0.0005
   momentum: 0.9
+  sampling_func: _client_sampling
 
 validation_args:
   frequency_of_the_test: 1

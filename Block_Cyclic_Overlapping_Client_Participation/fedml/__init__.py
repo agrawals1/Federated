@@ -201,38 +201,38 @@ def manage_profiling_args(args):
 
         MLOpsProfilerEvent.enable_sys_perf_profiling()
 
-    if hasattr(args, "enable_wandb") and args.enable_wandb:
-        wandb_only_server = getattr(args, "wandb_only_server", None)
-        if (wandb_only_server and args.rank == 0 and args.process_id == 0) or not wandb_only_server:
-            wandb_entity = getattr(args, "wandb_entity", None)
-            if wandb_entity is not None:
-                wandb_args = {
-                    "entity": args.wandb_entity,
-                    "project": args.wandb_project,
-                    "config": args,
-                }
-            else:
-                wandb_args = {
-                    "project": args.wandb_project,
-                    "config": args,
-                }
+    # if hasattr(args, "enable_wandb") and args.enable_wandb:
+    #     wandb_only_server = getattr(args, "wandb_only_server", None)
+    #     if (wandb_only_server and args.rank == 0 and args.process_id == 0) or not wandb_only_server:
+    #         wandb_entity = getattr(args, "wandb_entity", None)
+    #         if wandb_entity is not None:
+    #             wandb_args = {
+    #                 "entity": args.wandb_entity,
+    #                 "project": args.wandb_project,
+    #                 "config": args,
+    #             }
+    #         else:
+    #             wandb_args = {
+    #                 "project": args.wandb_project,
+    #                 "config": args,
+    #             }
 
-            if hasattr(args, "run_name"):
-                wandb_args["name"] = args.run_name
+    #         if hasattr(args, "run_name"):
+    #             wandb_args["name"] = args.run_name
 
-            if hasattr(args, "wandb_group_id"):
-                # wandb_args["group"] = args.wandb_group_id
-                wandb_args["group"] = "Test1"
-                wandb_args["name"] = f"Client {args.rank}"
-                wandb_args["job_type"] = str(args.rank)
+    #         if hasattr(args, "wandb_group_id"):
+    #             # wandb_args["group"] = args.wandb_group_id
+    #             wandb_args["group"] = "Test1"
+    #             wandb_args["name"] = f"Client {args.rank}"
+    #             wandb_args["job_type"] = str(args.rank)
 
-            import wandb
+    #         import wandb
 
-            wandb.init(**wandb_args)
+    #         wandb.init(**wandb_args)
 
-            from .core.mlops.mlops_profiler_event import MLOpsProfilerEvent
+    #         from .core.mlops.mlops_profiler_event import MLOpsProfilerEvent
 
-            MLOpsProfilerEvent.enable_wandb_tracking()
+    #         MLOpsProfilerEvent.enable_wandb_tracking()
 
 
 def manage_cuda_rpc_args(args):

@@ -107,7 +107,8 @@ class FedAvgAPI(object):
             for scalability: following the original FedAvg algorithm, we uniformly sample a fraction of clients in each round.
             Instead of changing the 'Client' instances, our implementation keeps the 'Client' instances and then updates their local dataset 
             """
-            client_indexes = self.client_sampling_cyclic_noOverlap_pattern(
+            sampling_func = getattr(self, self.args.sampling_func, None)
+            client_indexes = sampling_func(
                 round_idx, self.args.client_num_in_total
             )
             logging.info("client_indexes = " + str(client_indexes))
@@ -181,7 +182,7 @@ class FedAvgAPI(object):
         logging.info("client_indexes = %s" % str(client_indexes))
         return client_indexes
     def client_sampling_cyclic_overlap_pattern(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.args.client_num_per_round - 1)) % client_num_in_total
+        start_idx = (round_idx * (self.args.client_num_per_round - 4)) % client_num_in_total
         client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
         return client_indexes
     
