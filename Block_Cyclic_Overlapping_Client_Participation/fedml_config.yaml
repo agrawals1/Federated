@@ -7,7 +7,7 @@ common_args:
   mlops_run_name: fedml_torch_fedavg_COCP
   active: 0
   var_epoch: 0
-  overlap_percentage: 0.2
+  overlap_percentage: 1.0
   alpha_dirichlet: 1.0
   alpha_active: 1.0
 
@@ -27,10 +27,10 @@ train_args:
   client_id_list: "[]"
   client_num_in_total: 100
   client_num_per_round: 10
-  num_groups: 3
+  num_groups: 5
   comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
   epochs: 4
-  batch_size: 129
+  batch_size: 100
   client_optimizer: CosAnnealing
   learning_rate: .1
   weight_decay: 0.0005
@@ -53,5 +53,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
-  run_name: cyclic_noOverlap_pattern_E4_R50_LR5e-1_DEC5e-4_COS_rsnt18_cfar10_Dirichlet
+  run_name: Exp2_cyclic_Overlap_random_E4_R50_LR5e-1_DEC5e-4_OverlapPercent100
   using_mlops: false
