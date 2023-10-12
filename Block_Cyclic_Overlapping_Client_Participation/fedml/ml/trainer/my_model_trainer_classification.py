@@ -55,7 +55,7 @@ class ModelTrainerCLS(ClientTrainer):
         for epoch in range(num_epochs):
             batch_loss = []
 
-            for batch_idx, (x, labels) in enumerate(train_data):
+            for batch_idx, (x, labels, true_lengths) in enumerate(train_data):
                 x, labels = x.to(device), labels.to(device)
                 model.zero_grad()
                 log_probs = model(x)

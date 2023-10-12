@@ -10,12 +10,12 @@ from fedml.model.cv.mobilenet import mobilenet
 from fedml.model.cv.mobilenet_v3 import MobileNetV3
 from fedml.model.cv.resnet import resnet56
 from fedml.model.cv.resnet56 import resnet_client, resnet_server
-from fedml.model.cv.resnet_gn import resnet18
-# from fedml.model.cv.resnet_gn import resnet20
+from fedml.model.cv.resnet_gn import resnet18, resnet20
+# from fedml.model.mobile.mnn_resnet import resnet20
 from fedml.model.linear.lr import LogisticRegression
 from fedml.model.linear.lr_cifar10 import LogisticRegression_Cifar10
 from fedml.model.nlp.rnn import RNN_OriginalFedAvg, RNN_StackOverFlow, RNN_FedShakespeare
-
+from fedml.model.nlp.lstm import BiLSTM
 
 def create(args, output_dim):
     global model
@@ -27,6 +27,12 @@ def create(args, output_dim):
     elif model_name == "resnet_18" and args.dataset == "cifar10":
         logging.info("RESNET_18 + CIFAR10")
         model = resnet18(num_classes = 10)
+    elif model_name == "resnet_20" and args.dataset == "cifar100":
+        logging.info("RESNET_20 + CIFAR100")
+        model = resnet20(num_classes = 100)
+    elif model_name == "bilstm" and args.dataset == "news":
+        logging.info("bilstm + news")
+        model = BiLSTM(output_dim=4)
     elif model_name == "lr" and args.dataset == "cifar10":
         logging.info("LogisticRegression + CIFAR10")
         model = LogisticRegression_Cifar10(32 * 32 * 3, output_dim)

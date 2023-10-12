@@ -10,9 +10,10 @@ common_args:
   overlap_percentage: 1.0
   alpha_dirichlet: 1.0
   alpha_active: 1.0
+  overlap_num: 5
 
 data_args:
-  dataset: "cifar10"
+  dataset: "news"
   data_cache_dir: ~/fedml_data
   partition_method: "hetero"
   partition_alpha: 0.5
@@ -20,7 +21,7 @@ data_args:
 
 
 model_args:
-  model: "resnet_18"
+  model: "bilstm"
 
 train_args:
   federated_optimizer: "FedAvg"
@@ -53,5 +54,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
-  run_name: Exp2_cyclic_Overlap_random_E4_R50_LR5e-1_DEC5e-4_OverlapPercent100
+  run_name: nlp_test
   using_mlops: false
