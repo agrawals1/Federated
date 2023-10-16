@@ -1,0 +1,8 @@
+Cifar10 + resnet18
+optimizer : SGD
+Learning Rate: 0.1
+momentum: 0.9
+weight decay: .0005
+communication rounds: 50
+epoch per client: 4
+batch_size: 100

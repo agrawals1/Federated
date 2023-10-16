@@ -12,7 +12,7 @@ common_args:
   alpha_active: 1.0
 
 data_args:
-  dataset: "cifar10"
+  dataset: "cifar100"
   data_cache_dir: ~/fedml_data
   partition_method: "hetero"
   partition_alpha: 0.5
@@ -30,7 +30,7 @@ train_args:
   num_groups: 5
   comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
   epochs: 4
-  batch_size: 100
+  batch_size: 300
   client_optimizer: CosAnnealing
   learning_rate: .1
   weight_decay: 0.0005
@@ -53,5 +53,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
-  run_name: Exp2_cyclic_Overlap_random_E4_R50_LR5e-1_DEC5e-4_OverlapPercent100
+  run_name: overlap_pattern_OverlapCount9_E4_R50_LRe-1_DEC5e-4_Dir1_Cifar100_Resnet18
   using_mlops: false

@@ -1,6 +1,6 @@
 import json
 import os
-
+import seaborn as sns
 import numpy as np
 import wget
 from ...ml.engine import ml_engine_adapter
@@ -31,51 +31,90 @@ def distribute_test_data(test_dataset, num_clients):
         test_partition[i] = all_indices[start_idx:end_idx]
     return test_partition
 
-def plots(stats, num_of_clients):
-    print("*********** Some stats on client data distribution **********")
-    print(f"Mean samples per client: {stats['sample per client']['std']:.2f}")
-    print()
-    print(f"Standard deviation of samples per client: {stats['sample per client']['stddev']:.2f}")
-    num_of_clients = min(10, num_of_clients)
-    samples_per_client = [v["x"] for k, v in stats.items() if k != "sample per client"]
-    client_indices = [i for i, _ in enumerate(samples_per_client)]
+# def plots(stats, num_of_clients):
+#     print("*********** Some stats on client data distribution **********")
+#     print(f"Mean samples per client: {stats['sample per client']['std']:.2f}")
+#     print()
+#     print(f"Standard deviation of samples per client: {stats['sample per client']['stddev']:.2f}")
+#     num_of_clients = min(10, num_of_clients)
+#     samples_per_client = [v["x"] for k, v in stats.items() if k != "sample per client"]
+#     client_indices = [i for i, _ in enumerate(samples_per_client)]
     
-    plt.figure(figsize=(10,6))
+#     plt.figure(figsize=(10,6))
     
-    # If there are 10 or fewer clients
-    if len(samples_per_client) <= 10:
-        plt.bar(client_indices, samples_per_client, color="skyblue", edgecolor="black")
-    # If there are more than 10 clients
-    else:
-        sorted_samples_with_indices = sorted(enumerate(samples_per_client), key=lambda x: x[1])
-        top_5_indices, top_5_samples = zip(*sorted_samples_with_indices[-5:])
-        bottom_5_indices, bottom_5_samples = zip(*sorted_samples_with_indices[:5])
+#     # If there are 10 or fewer clients
+#     if len(samples_per_client) <= 10:
+#         plt.bar(client_indices, samples_per_client, color="skyblue", edgecolor="black")
+#     # If there are more than 10 clients
+#     else:
+#         sorted_samples_with_indices = sorted(enumerate(samples_per_client), key=lambda x: x[1])
+#         top_5_indices, top_5_samples = zip(*sorted_samples_with_indices[-5:])
+#         bottom_5_indices, bottom_5_samples = zip(*sorted_samples_with_indices[:5])
         
-        plt.bar(top_5_indices, top_5_samples, color="green", label="Top 5 clients (most samples)", edgecolor="black")
-        plt.bar(bottom_5_indices, bottom_5_samples, color="red", label="Bottom 5 clients (least samples)", edgecolor="black")
-        plt.legend()
+#         plt.bar(top_5_indices, top_5_samples, color="green", label="Top 5 clients (most samples)", edgecolor="black")
+#         plt.bar(bottom_5_indices, bottom_5_samples, color="red", label="Bottom 5 clients (least samples)", edgecolor="black")
+#         plt.legend()
 
-    plt.title("Frequency plot of samples per client")
-    plt.xlabel("Client Index")
-    plt.ylabel("Number of samples")
-    plt.grid(True, which='both', linestyle="--", linewidth=0.5)
-    plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/samples_per_client_histogram.png")  # Save the plot
-    plt.close()  # Close the plot
+#     plt.title("Frequency plot of samples per client")
+#     plt.xlabel("Client Index")
+#     plt.ylabel("Number of samples")
+#     plt.grid(True, which='both', linestyle="--", linewidth=0.5)
+#     plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/samples_per_client_histogram.png")  # Save the plot
+#     plt.close()  # Close the plot
 
-    plt.figure(figsize=(12,6))
-    for i in range(num_of_clients):
-        class_count = stats[i]["y"]
-        labels = list(class_count.keys())
-        counts = list(class_count.values())
-        plt.subplot(1, num_of_clients, i+1)
-        plt.bar(labels, counts, color="skyblue", edgecolor="black")
-        plt.title(f"Client {i} Class Distribution")
-        plt.xlabel("Class Label")
-        plt.ylabel("Number of Samples")
-        plt.grid(True, which="both", linestyle="--", linewidth="0.5")
+#     plt.figure(figsize=(12,6))
+#     for i in range(num_of_clients):
+#         class_count = stats[i]["y"]
+#         labels = list(class_count.keys())
+#         counts = list(class_count.values())
+#         plt.subplot(1, num_of_clients, i+1)
+#         plt.bar(labels, counts, color="skyblue", edgecolor="black")
+#         plt.title(f"Client {i} Class Distribution")
+#         plt.xlabel("Class Label")
+#         plt.ylabel("Number of Samples")
+#         plt.grid(True, which="both", linestyle="--", linewidth="0.5")
+#     plt.tight_layout()
+#     plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/class_distribution_per_client.png")  # Save the plot
+#     plt.close()  # Close the plot
+
+def plots(args, stats, num_classes):
+    
+    client_num = len(stats) - 1
+    save_path = "/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/"
+    save_id = args.run_name
+    
+    fig, axs = plt.subplots(2, figsize=(15, 12))
+
+    # Plot - Number of unique classes possessed by each client
+    unique_classes_counts = [len(stat['y']) for stat in stats.values() if 'y' in stat]
+    axs[0].bar(range(client_num), unique_classes_counts, color='skyblue')
+    axs[0].set_xlabel('Clients')
+    axs[0].set_ylabel('Number of Unique Classes')
+    axs[0].set_title('Number of Unique Classes Each Client Possesses')
+    axs[0].set_xticks(list(range(0, client_num, 10)))
+    axs[0].set_xticklabels([f'Client {i+1}' for i in range(0, client_num, 10)])
+
+    # Plot - Total samples for each client
+    total_samples = [stat['x'] for stat in stats.values() if 'x' in stat]
+    axs[1].bar(range(client_num), total_samples, color='skyblue')
+    axs[1].set_xlabel('Clients')
+    axs[1].set_ylabel('Total Samples')
+    axs[1].set_title('Total Samples for Each Client')
+    axs[1].set_xticks(list(range(0, client_num, 10)))
+    axs[1].set_xticklabels([f'Client {i+1}' for i in range(0, client_num, 10)])
+
+    # Mean and standard deviation lines for total samples
+    mean_samples = np.mean(total_samples)
+    std_samples = np.std(total_samples)
+    axs[1].axhline(y=mean_samples, color='r', linestyle='-', label=f"Mean: {mean_samples:.2f}")
+    axs[1].axhline(y=mean_samples + std_samples, color='g', linestyle='--', label=f"Mean + 1 StdDev: {mean_samples + std_samples:.2f}")
+    axs[1].axhline(y=mean_samples - std_samples, color='g', linestyle='--', label=f"Mean - 1 StdDev: {mean_samples - std_samples:.2f}")
+    axs[1].legend()
+
     plt.tight_layout()
-    plt.savefig("/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/class_distribution_per_client.png")  # Save the plot
-    plt.close()  # Close the plot
+    plt.savefig(save_path + save_id + ".png")
+    plt.show()
+    
     
 def dirichlet(
     dataset: Dataset, client_num: int, alpha: float, least_samples: int
@@ -200,7 +239,7 @@ def distribute_classes(num_clients, total_classes):
 
 
 
-def read_data_dirichlet(alpha, pytorch_dataset, num_clients=7):
+def read_data_dirichlet(args, alpha, pytorch_dataset, num_clients=7):
     """
     Reads and processes heterogeneous training and testing data for a given number of clients using Dirichlet distribution.
 
@@ -234,6 +273,13 @@ def read_data_dirichlet(alpha, pytorch_dataset, num_clients=7):
     elif pytorch_dataset == "fashionMnist" :
         train_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=True, transform=transform, download=True)
         test_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=False, transform=transform, download=True)
+    elif pytorch_dataset == "cifar100":
+        train_dataset = datasets.CIFAR100(root="./home/shubham/fed_data/CIFAR100", train=True, transform=transform, download=True)
+        test_dataset = datasets.CIFAR100(root="./home/shubham/fed_data/CIFAR100", train=False, transform=transform, download=True)
+        all_train_x = [img.numpy().tolist() for img,_ in train_dataset]
+        all_test_x = [img.numpy().tolist() for img,_ in test_dataset]
+        all_train_y = [label for _, label in train_dataset]
+        all_test_y = [label for _, label in test_dataset]
     else:
         train_dataset = datasets.CIFAR10(root="./home/shubham/fed_data/CIFAR", train=True, transform=transform, download=True)
         test_dataset = datasets.CIFAR10(root="./home/shubham/fed_data/CIFAR", train=False, transform=transform, download=True)
@@ -243,7 +289,7 @@ def read_data_dirichlet(alpha, pytorch_dataset, num_clients=7):
         all_test_y = [label for _, label in test_dataset]
     # Splitting data using Dirichlet distribution
     train_client_idcs, stats = dirichlet(train_dataset, num_clients, alpha, len(all_train_y)//(5*num_clients))
-    plots(stats, num_clients)
+    plots(args, stats, 100)
     # test_client_idcs = dirichlet(np.arange(len(all_test_y)), np.array(all_test_y), alpha, num_clients)
     # uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
@@ -434,7 +480,7 @@ def load_partition_data_mnist_by_device_id(batch_size, device_id, train_path="MN
 def load_partition_data_mnist(
     args, batch_size
 ):
-    users, groups, train_data, test_data = read_data_dirichlet(args.alpha_dirichlet,num_clients=args.client_num_in_total, pytorch_dataset = args.dataset)
+    users, groups, train_data, test_data = read_data_dirichlet(args, args.alpha_dirichlet,num_clients=args.client_num_in_total, pytorch_dataset = args.dataset)
 
     if len(groups) == 0:
         groups = [None for _ in users]

@@ -1,0 +1,1 @@
+{"Train/Acc": 0.02298342541436464, "round": 14, "_timestamp": 1697403909.6913445, "_runtime": 1652.31654047966, "_step": 119, "Train/Loss": 4.518150611477004, "Test/Acc": 0.0292, "Test/Loss": 4.491923666000366, "Global Test Acc": 0.0291, "Global Test Loss": 4.485093080997467, "Global Train Acc": 0.0241, "Global Train Loss": 4.510135462284088}

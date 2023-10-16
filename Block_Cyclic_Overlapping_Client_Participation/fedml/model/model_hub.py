@@ -27,6 +27,9 @@ def create(args, output_dim):
     elif model_name == "resnet_18" and args.dataset == "cifar10":
         logging.info("RESNET_18 + CIFAR10")
         model = resnet18(num_classes = 10)
+    elif model_name == "resnet_18" and args.dataset == "cifar100":
+        logging.info("RESNET_18 + CIFAR100")
+        model = resnet18(num_classes = 100)
     elif model_name == "lr" and args.dataset == "cifar10":
         logging.info("LogisticRegression + CIFAR10")
         model = LogisticRegression_Cifar10(32 * 32 * 3, output_dim)
