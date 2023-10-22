@@ -10,6 +10,8 @@ from fedml import mlops
 from fedml.ml.trainer.trainer_creator import create_model_trainer
 from .client import Client
 from collections import OrderedDict
+from Block_Cyclic_Overlapping_Client_Participation.ClientSampler import ClientSampler
+
 
 class FedAvgAPI(object):
     def __init__(self, args, device, dataset, model):
@@ -31,7 +33,14 @@ class FedAvgAPI(object):
         self.val_global = None
         self.train_data_num_in_total = train_data_num
         self.test_data_num_in_total = test_data_num
-
+        self.client_sampler = ClientSampler(args)
+        self.sampling_functions = {"_client_sampling": self.client_sampler._client_sampling, 
+                              "client_sampling_cyclic_overlap_pattern": self.client_sampler.client_sampling_cyclic_overlap_pattern,
+                              "client_sampling_cyclic_noOverlap_pattern": self.client_sampler.client_sampling_cyclic_noOverlap_pattern,
+                              "client_sampling_cyclic_noOverlap_random": self.client_sampler.client_sampling_cyclic_noOverlap_random,
+                              "client_sampling_cyclic_overlap_random": self.client_sampler.client_sampling_cyclic_overlap_random
+                              }
+        
         self.client_list = []
         self.train_data_local_num_dict = train_data_local_num_dict
         self.train_data_local_dict = train_data_local_dict
@@ -107,7 +116,7 @@ class FedAvgAPI(object):
             for scalability: following the original FedAvg algorithm, we uniformly sample a fraction of clients in each round.
             Instead of changing the 'Client' instances, our implementation keeps the 'Client' instances and then updates their local dataset 
             """
-            client_indexes = self.client_sampling_cyclic_overlap_pattern(
+            client_indexes = self.sampling_functions[self.args.sampling_fun](
                 round_idx, self.args.client_num_in_total
             )
             logging.info("client_indexes = " + str(client_indexes))
@@ -171,78 +180,7 @@ class FedAvgAPI(object):
         mlops.log_training_finished_status()
         mlops.log_aggregation_finished_status()
 
-    def _client_sampling(self, round_idx, client_num_in_total):
-        if client_num_in_total == self.args.client_num_per_round:
-            client_indexes = [client_index for client_index in range(client_num_in_total)]
-        else:
-            num_clients = min(self.args.client_num_per_round, client_num_in_total)
-            np.random.seed(round_idx)  # make sure for each comparison, we are selecting the same clients each round
-            client_indexes = np.random.choice(range(client_num_in_total), num_clients, replace=False)
-        logging.info("client_indexes = %s" % str(client_indexes))
-        return client_indexes
-    def client_sampling_cyclic_overlap_pattern(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.args.client_num_per_round - 9)) % client_num_in_total
-        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
-        return client_indexes
     
-    def client_sampling_cyclic_noOverlap_pattern(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.args.client_num_per_round)) % client_num_in_total
-        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
-        return client_indexes
-    
-    def client_sampling_cyclic_noOverlap_random(self, round_idx, client_num_in_total):
-    # Number of client groups
-        K = self.args.num_groups
-
-        # Number of clients in each group
-        M_per_K = client_num_in_total // K
-
-        # Determine the active group in the current round
-        active_group_idx = round_idx % K
-
-        # Start and end indices for the active group
-        start_idx = active_group_idx * M_per_K
-        end_idx = start_idx + M_per_K
-
-        # List of clients in the active group
-        group_clients = list(range(start_idx, end_idx))
-
-        # Randomly sample N clients from the active group without replacement
-        sampled_clients = random.sample(group_clients, self.args.client_num_per_round)
-
-        return sampled_clients
-    def client_sampling_cyclic_overlap_random(self, round_idx, client_num_in_total):
-    # Number of client groups
-        K = self.args.num_groups
-
-        # Percentage overlap P
-        P = self.args.overlap_percentage  # Assuming this is given as a value between 0 and 1
-
-        # Number of clients in each group
-        M_per_K = client_num_in_total // K
-
-        # Calculate overlap in terms of number of clients
-        overlap = int(P * M_per_K)
-
-        # Determine the active group in the current round
-        active_group_idx = round_idx % K
-
-        # Start and end indices for the active group
-        # Adjust the start index by subtracting the overlap
-        start_idx = active_group_idx * M_per_K - overlap * (active_group_idx)
-        end_idx = start_idx + M_per_K
-
-        # Adjust for potential negative indices for the first group
-        start_idx = max(0, start_idx)
-
-        # List of clients in the active group
-        group_clients = list(range(start_idx, end_idx))
-
-        # Randomly sample N clients from the active group without replacement
-        sampled_clients = random.sample(group_clients, self.args.client_num_per_round)
-
-        return sampled_clients
-
     def _generate_validation_set(self, num_samples=10000):
         test_data_num = len(self.test_global.dataset)
         sample_indices = random.sample(range(test_data_num), min(num_samples, test_data_num))

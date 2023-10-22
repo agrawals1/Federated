@@ -10,12 +10,12 @@ from fedml.model.cv.mobilenet import mobilenet
 from fedml.model.cv.mobilenet_v3 import MobileNetV3
 from fedml.model.cv.resnet import resnet56
 from fedml.model.cv.resnet56 import resnet_client, resnet_server
-from fedml.model.cv.resnet_gn import resnet18
-# from fedml.model.cv.resnet_gn import resnet20
+from fedml.model.cv.resnet_gn import resnet18, resnet20
+# from fedml.model.mobile.mnn_resnet import resnet20
 from fedml.model.linear.lr import LogisticRegression
 from fedml.model.linear.lr_cifar10 import LogisticRegression_Cifar10
 from fedml.model.nlp.rnn import RNN_OriginalFedAvg, RNN_StackOverFlow, RNN_FedShakespeare
-
+from fedml.model.nlp.lstm import BiLSTM
 
 def create(args, output_dim):
     global model

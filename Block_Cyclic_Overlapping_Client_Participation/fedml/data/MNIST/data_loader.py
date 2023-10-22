@@ -5,9 +5,9 @@ import numpy as np
 import wget
 from ...ml.engine import ml_engine_adapter
 import matplotlib.pyplot as plt
-
+import pandas as pd
 cwd = os.getcwd()
-
+from torch.utils.data import Dataset, DataLoader
 import zipfile
 
 from ...constants import FEDML_DATA_MNIST_URL
@@ -19,6 +19,32 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 from torch.utils.data import Dataset
+
+# tokenizer = get_tokenizer('basic_english')
+# text_transform = ROBERTA_BASE_ENCODER.transform()
+
+class TextDataset(Dataset):
+    def __init__(self, texts, labels) -> None:
+        self.texts = texts
+        self.labels = labels
+        self.classes = list(set(labels))
+        self.targets = labels
+        
+    def __len__(self):
+        return len(self.texts)
+    
+    def __getitem__(self, index):
+        return self.texts[index], self.labels[index]
+    
+def get_roberta_token_embeddings(texts):
+    
+    embeddings = [torch.tensor(text_transform(text)) for text in texts]
+    max_length = max([emb.shape[0] for emb in embeddings])
+    
+    with torch.no_grad():
+        padded_embeddings = [torch.cat((emb, torch.zeros(max_length - emb.shape[0])), 0) for emb in embeddings]
+        
+    return torch.stack(padded_embeddings)
 
 def distribute_test_data(test_dataset, num_clients):
     all_indices = list(range(len(test_dataset)))
@@ -266,10 +292,11 @@ def read_data_dirichlet(args, alpha, pytorch_dataset, num_clients=7):
     if pytorch_dataset == "mnist":
         train_dataset = datasets.MNIST(root="./home/shubham/fed_data/MNIST", train=True, transform=transform, download=True)
         test_dataset = datasets.MNIST(root="./home/shubham/fed_data/MNIST", train=False, transform=transform, download=True)
-        all_train_x = [img.flatten().numpy().tolist() for img,_ in train_dataset]
-        all_test_x = [img.flatten().numpy().tolist() for img,_ in test_dataset]
+        all_train_x = [img.numpy().tolist() for img,_ in train_dataset]
+        all_test_x = [img.numpy().tolist() for img,_ in test_dataset]
         all_train_y = [label for _, label in train_dataset]
         all_test_y = [label for _, label in test_dataset]
+        
     elif pytorch_dataset == "fashionMnist" :
         train_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=True, transform=transform, download=True)
         test_dataset = datasets.FashionMNIST(root="./home/shubham/fed_data/Fashion", train=False, transform=transform, download=True)
@@ -299,22 +326,32 @@ def read_data_dirichlet(args, alpha, pytorch_dataset, num_clients=7):
     for client_idx, idcs in train_client_idcs.items():
         client_data_x = []
         client_data_y = []
-    
+        client_data_lengths = []
+        
         for i in idcs:
             client_data_x.append(all_train_x[i])
             client_data_y.append(all_train_y[i])
-    
+            if pytorch_dataset == "news":
+                client_data_lengths.append(train_lengths[i])
+                
         train_data[client_idx] = {"x": client_data_x, "y": client_data_y}
+        if pytorch_dataset == "news":
+            train_data[client_idx]["lengths"] = client_data_lengths
 
     for client_idx, idcs in test_client_idcs.items():
         client_data_x = []
         client_data_y = []
+        client_data_lengths = []
     
         for i in idcs:
             client_data_x.append(all_test_x[i])
             client_data_y.append(all_test_y[i])
+            if pytorch_dataset == "news":
+                client_data_lengths.append(test_lengths[i])
     
         test_data[client_idx] = {"x": client_data_x, "y": client_data_y}
+        if pytorch_dataset == "news":
+            test_data[client_idx]["lengths"] = client_data_lengths
 
     clients = list(range(num_clients))
     groups = []
@@ -453,21 +490,31 @@ def batch_data(args, data, batch_size):
     """
     data_x = data["x"]
     data_y = data["y"]
-
+    if args.model == "bilstm":
+        true_lengths = data["lengths"]
+    
     # randomly shuffle data
     np.random.seed(100)
     rng_state = np.random.get_state()
     np.random.shuffle(data_x)
     np.random.set_state(rng_state)
     np.random.shuffle(data_y)
+    if args.model == "bilstm":
+        true_lengths = np.array(true_lengths)
+        np.random.shuffle(true_lengths)
 
     # loop through mini-batches
     batch_data = list()
     for i in range(0, len(data_x), batch_size):
         batched_x = data_x[i : i + batch_size]
-        batched_y = data_y[i : i + batch_size]
+        batched_y = data_y[i : i + batch_size]        
         batched_x, batched_y = ml_engine_adapter.convert_numpy_to_ml_engine_data_format(args, batched_x, batched_y)
-        batch_data.append((batched_x, batched_y))
+        if args.model == "bilstm":            
+            batched_TrueLengths = true_lengths[i: i+batch_size]
+            batched_TrueLengths = torch.stack([torch.tensor(i) for i in batched_TrueLengths], dim=0)
+            batch_data.append((batched_x, batched_y, batched_TrueLengths))
+        else:
+            batch_data.append((batched_x, batched_y))
     return batch_data
 
 
@@ -512,7 +559,7 @@ def load_partition_data_mnist(
         client_idx += 1
     logging.info("finished the loading data")
     client_num = client_idx
-    class_num = 10
+    class_num = 4
 
     return (
         client_num,

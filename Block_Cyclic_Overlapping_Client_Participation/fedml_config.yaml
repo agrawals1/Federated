@@ -8,8 +8,9 @@ common_args:
   active: 0
   var_epoch: 0
   overlap_percentage: 1.0
-  alpha_dirichlet: 1.0
+  alpha_dirichlet: 0.01
   alpha_active: 1.0
+  sampling_fun: "client_sampling_cyclic_noOverlap_pattern"
 
 data_args:
   dataset: "cifar100"
@@ -30,7 +31,7 @@ train_args:
   num_groups: 5
   comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
   epochs: 4
-  batch_size: 300
+  batch_size: 301
   client_optimizer: CosAnnealing
   learning_rate: .1
   weight_decay: 0.0005
@@ -53,5 +54,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
-  run_name: overlap_pattern_OverlapCount9_E4_R50_LRe-1_DEC5e-4_Dir1_Cifar100_Resnet18
+  run_name: nooverlap_pattern_E4_R50_LRe-1_DEC5e-4_Dir0.01_Cifar100_Resnet18
   using_mlops: false

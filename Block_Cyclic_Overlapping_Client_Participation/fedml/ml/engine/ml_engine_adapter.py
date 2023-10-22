@@ -12,6 +12,8 @@ def convert_numpy_to_torch_data_format(args, batched_x, batched_y):
 
     if args.model == "cnn":
         batched_x = torch.from_numpy(np.asarray(batched_x)).float().reshape(-1, 28, 28)  # CNN_MINST
+    elif args.model == "bilstm":
+        batched_x = torch.stack(batched_x, dim=0)
     else:
         batched_x = torch.from_numpy(np.asarray(batched_x)).float()  # LR_MINST or other
 
