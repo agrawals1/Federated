@@ -10,7 +10,7 @@ from .stackoverflow_lr.data_loader import load_partition_data_federated_stackove
 from .FederatedEMNIST.data_loader import load_partition_data_federated_emnist
 from .ImageNet.data_loader import load_partition_data_ImageNet
 from .Landmarks.data_loader import load_partition_data_landmarks
-from .MNIST.data_loader import load_partition_data_mnist, download_mnist
+from .MNIST.data_loader import load_partition_data
 from .cifar10.data_loader import load_partition_data_cifar10
 from .cifar10.efficient_loader import efficient_load_partition_data_cifar10
 from .cifar100.data_loader import load_partition_data_cifar100
@@ -260,7 +260,6 @@ def load_synthetic_data(args):
         full_batch = False
 
     if dataset_name == "mnist" or dataset_name == "cifar10" or dataset_name == "fashionMnist" or dataset_name == "cifar100":
-        # download_mnist(args.data_cache_dir)
         logging.info("load_data. dataset_name = %s" % dataset_name)
         (
             client_num,
@@ -272,9 +271,8 @@ def load_synthetic_data(args):
             train_data_local_dict,
             test_data_local_dict,
             class_num,
-        ) = load_partition_data_mnist(
-            args,
-            args.batch_size)
+        ) = load_partition_data(
+            args)
         """
         For shallow NN or linear models, 
         we uniformly sample a fraction of clients each round (as the original FedAvg paper)

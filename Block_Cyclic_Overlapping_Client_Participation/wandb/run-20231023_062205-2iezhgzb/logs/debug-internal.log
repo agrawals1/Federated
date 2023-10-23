@@ -1,0 +1,168 @@
+2023-10-23 06:22:05,858 INFO    StreamThr :84152 [internal.py:wandb_internal():90] W&B internal server running at pid: 84152, started at: 2023-10-23 06:22:05.857842
+2023-10-23 06:22:05,860 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: status
+2023-10-23 06:22:05,861 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: status
+2023-10-23 06:22:05,863 DEBUG   SenderThread:84152 [sender.py:send():302] send: header
+2023-10-23 06:22:05,863 INFO    WriterThread:84152 [datastore.py:open_for_write():75] open: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/run-2iezhgzb.wandb
+2023-10-23 06:22:05,893 DEBUG   SenderThread:84152 [sender.py:send():302] send: run
+2023-10-23 06:22:06,630 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: check_version
+2023-10-23 06:22:06,630 INFO    SenderThread:84152 [dir_watcher.py:__init__():216] watching files in: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files
+2023-10-23 06:22:06,630 INFO    SenderThread:84152 [sender.py:_start_run_threads():913] run started: 2iezhgzb with start time 1698022325.855574
+2023-10-23 06:22:06,630 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:22:06,630 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:22:06,631 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: check_version
+2023-10-23 06:22:06,758 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: run_start
+2023-10-23 06:22:06,765 DEBUG   HandlerThread:84152 [meta.py:__init__():35] meta init
+2023-10-23 06:22:06,765 DEBUG   HandlerThread:84152 [meta.py:__init__():50] meta init done
+2023-10-23 06:22:06,765 DEBUG   HandlerThread:84152 [meta.py:probe():216] probe
+2023-10-23 06:22:06,778 DEBUG   HandlerThread:84152 [meta.py:_setup_git():206] setup git
+2023-10-23 06:22:06,793 DEBUG   HandlerThread:84152 [meta.py:_setup_git():213] setup git done
+2023-10-23 06:22:06,793 DEBUG   HandlerThread:84152 [meta.py:_save_pip():54] save pip
+2023-10-23 06:22:06,794 DEBUG   HandlerThread:84152 [meta.py:_save_pip():68] save pip done
+2023-10-23 06:22:06,794 DEBUG   HandlerThread:84152 [meta.py:_save_conda():75] save conda
+2023-10-23 06:22:07,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_created():275] file/dir created: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/wandb-summary.json
+2023-10-23 06:22:07,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_created():275] file/dir created: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/conda-environment.yaml
+2023-10-23 06:22:07,634 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_created():275] file/dir created: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/requirements.txt
+2023-10-23 06:22:08,859 DEBUG   HandlerThread:84152 [meta.py:_save_conda():85] save conda done
+2023-10-23 06:22:08,859 DEBUG   HandlerThread:84152 [meta.py:probe():254] probe done
+2023-10-23 06:22:08,862 DEBUG   SenderThread:84152 [sender.py:send():302] send: files
+2023-10-23 06:22:08,862 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-metadata.json with policy now
+2023-10-23 06:22:08,867 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:22:08,868 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:22:09,213 DEBUG   SenderThread:84152 [sender.py:send():302] send: telemetry
+2023-10-23 06:22:09,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/conda-environment.yaml
+2023-10-23 06:22:09,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_created():275] file/dir created: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/wandb-metadata.json
+2023-10-23 06:22:09,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_created():275] file/dir created: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:09,769 INFO    Thread-16 :84152 [upload_job.py:push():138] Uploaded file /tmp/tmpv1qpmewhwandb/1kzu1pb9-wandb-metadata.json
+2023-10-23 06:22:11,633 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:13,634 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:15,634 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:17,635 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:19,640 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:21,646 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:24,216 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:22:24,216 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:22:24,647 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:26,648 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:28,648 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:30,649 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:32,649 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:34,650 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:35,131 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:22:36,650 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:36,650 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/config.yaml
+2023-10-23 06:22:38,651 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:39,580 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:22:39,581 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:22:40,651 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:42,652 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:44,652 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:46,653 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:48,653 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:50,654 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:52,654 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:54,655 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:54,896 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:22:54,896 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:22:56,655 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:22:58,656 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:00,656 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:02,657 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:04,657 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:05,476 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:23:06,658 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:08,658 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:10,270 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:23:10,270 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:23:10,659 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:12,659 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:14,660 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:16,660 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:18,661 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:20,662 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:22,662 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:24,663 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:25,632 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:23:25,633 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:23:26,664 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:28,664 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:30,665 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:32,665 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:34,666 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:35,785 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:23:36,666 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:38,666 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:40,667 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:41,041 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:23:41,041 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:23:42,667 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:44,668 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:46,668 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:48,669 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:50,669 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:52,670 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:54,671 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:56,447 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:23:56,448 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:23:56,671 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:23:58,672 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:24:00,672 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:24:02,673 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:24:06,089 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:24:11,791 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:24:11,791 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:24:27,177 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:24:27,177 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:24:36,390 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:24:42,539 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:24:42,539 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:24:57,885 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:24:57,885 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:25:06,688 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:25:13,294 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:25:13,294 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:25:18,233 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:18,234 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:18,234 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:18,236 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:18,237 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:18,239 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:18,241 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:18,241 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:18,241 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:18,246 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:18,246 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:18,246 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:18,246 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:18,246 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:18,246 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:18,246 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:18,694 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/wandb-summary.json
+2023-10-23 06:25:20,694 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:25:28,668 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:25:28,669 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:25:32,500 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:32,500 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:32,500 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:32,501 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:32,502 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:32,502 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: partial_history
+2023-10-23 06:25:32,503 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:32,504 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:32,504 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:32,504 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:32,504 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:32,504 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:32,505 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:32,505 DEBUG   SenderThread:84152 [sender.py:send():302] send: history
+2023-10-23 06:25:32,505 DEBUG   SenderThread:84152 [sender.py:send():302] send: summary
+2023-10-23 06:25:32,505 INFO    SenderThread:84152 [sender.py:_save_file():1156] saving file wandb-summary.json with policy end
+2023-10-23 06:25:32,697 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/wandb-summary.json
+2023-10-23 06:25:34,698 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:25:36,698 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:25:37,012 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats
+2023-10-23 06:25:38,699 INFO    Thread-12 :84152 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/wandb/run-20231023_062205-2iezhgzb/files/output.log
+2023-10-23 06:25:44,017 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:25:44,017 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:25:59,409 DEBUG   HandlerThread:84152 [handler.py:handle_request():141] handle_request: stop_status
+2023-10-23 06:25:59,410 DEBUG   SenderThread:84152 [sender.py:send_request():316] send_request: stop_status
+2023-10-23 06:26:07,334 DEBUG   SenderThread:84152 [sender.py:send():302] send: stats

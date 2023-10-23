@@ -1,58 +1,49 @@
+comm_args:
+  backend: sp
 common_args:
-  training_type: "simulation"
-  random_seed: 0
-  config_version: "dev"
+  active: 0
+  alpha_active: 1.0
+  alpha_dirichlet: 1
+  config_version: dev
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_COCP
-  active: 0
-  var_epoch: 0
+  overlap_num: 0
   overlap_percentage: 1.0
-  alpha_dirichlet: 0.01
-  alpha_active: 1.0
-  sampling_fun: "client_sampling_cyclic_noOverlap_pattern"
-
+  random_seed: 0
+  sampling_fun: client_sampling_cyclic_overlap_pattern
+  training_type: simulation
+  var_epoch: 0
 data_args:
-  dataset: "cifar100"
   data_cache_dir: ~/fedml_data
-  partition_method: "hetero"
+  dataset: CIFAR100
   partition_alpha: 0.5
-  
-
-
-model_args:
-  model: "resnet_18"
-
-train_args:
-  federated_optimizer: "FedAvg"
-  client_id_list: "[]"
-  client_num_in_total: 100
-  client_num_per_round: 10
-  num_groups: 5
-  comm_round: 50 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
-  epochs: 4
-  batch_size: 301
-  client_optimizer: CosAnnealing
-  learning_rate: .1
-  weight_decay: 0.0005
-  momentum: 0.9
-
-validation_args:
-  frequency_of_the_test: 1
-
+  partition_method: hetero
 device_args:
-  using_gpu: true
   gpu_id: 0
-
-comm_args:
-  backend: "sp"
-
+  using_gpu: true
+model_args:
+  model: RESNET_18
 tracking_args:
   enable_tracking: false
-   # When running on MLOps platform(open.fedml.ai), the default log path is at ~/fedml-client/fedml/logs/ and ~/fedml-server/fedml/logs/
   enable_wandb: true
-  wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
-  wandb_entity: shubham22124
-  wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
-  run_name: nooverlap_pattern_E4_R50_LRe-1_DEC5e-4_Dir0.01_Cifar100_Resnet18
+  run_name: E4_R75_LRe-1_Dir:1_Overlap:0
   using_mlops: false
+  wandb_entity: shubham22124
+  wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
+  wandb_project: Cyclic and Overlapping Client Participation in Federated Setting
+train_args:
+  batch_size: 301
+  client_id_list: '[]'
+  client_num_in_total: 100
+  client_num_per_round: 10
+  client_optimizer: CosAnnealing
+  comm_round: 75
+  epochs: 4
+  federated_optimizer: FedAvg
+  learning_rate: 0.1
+  momentum: 0.9
+  num_groups: 5
+  weight_decay: 0.0005
+validation_args:
+  frequency_of_the_test: 1

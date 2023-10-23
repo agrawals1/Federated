@@ -17,12 +17,7 @@ class ClientSampler:
         return client_indexes
     
     def client_sampling_cyclic_overlap_pattern(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.args.client_num_per_round - 3)) % client_num_in_total
-        client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
-        return client_indexes
-    
-    def client_sampling_cyclic_noOverlap_pattern(self, round_idx, client_num_in_total):
-        start_idx = (round_idx * (self.args.client_num_per_round)) % client_num_in_total
+        start_idx = (round_idx * (self.args.client_num_per_round - self.args.overlap_num)) % client_num_in_total
         client_indexes = [(start_idx + i) % client_num_in_total for i in range(self.args.client_num_per_round)]
         return client_indexes
     

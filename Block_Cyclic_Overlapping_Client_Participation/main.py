@@ -4,7 +4,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.resolve()))
 import fedml
 from fedml import FedMLRunner
-from fedml.data.MNIST.data_loader import download_mnist, load_partition_data_mnist
 
 if __name__ == "__main__":
     # init FedML framework
