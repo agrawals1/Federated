@@ -258,8 +258,9 @@ def load_synthetic_data(args):
         args.batch_size = 128  # temporary batch size
     else:
         full_batch = False
+    datasets = ["mnist", "cifar10", "fashionMnist", "CIFAR100"]
 
-    if dataset_name == "mnist" or dataset_name == "cifar10" or dataset_name == "fashionMnist" or dataset_name == "cifar100":
+    if dataset_name in datasets:
         logging.info("load_data. dataset_name = %s" % dataset_name)
         (
             client_num,

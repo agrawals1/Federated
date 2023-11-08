@@ -23,3 +23,4 @@ config: {'yaml_config_file': 'fedml_config.yaml', 'run_id': '0', 'rank': 0, 'loc
 2023-10-23 06:22:08,868 INFO    MainThread:84022 [wandb_run.py:_redirect():1885] Wrapping output streams.
 2023-10-23 06:22:08,868 INFO    MainThread:84022 [wandb_run.py:_redirect():1907] Redirects installed.
 2023-10-23 06:22:08,869 INFO    MainThread:84022 [wandb_init.py:init():732] run started, returning control to user process
+2023-10-23 08:23:45,537 WARNING MsgRouterThr:84022 [router.py:message_loop():76] message_loop has been closed

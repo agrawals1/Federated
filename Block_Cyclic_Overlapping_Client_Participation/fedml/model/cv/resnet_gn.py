@@ -15,7 +15,10 @@ model_urls = {
     "resnet152": "https://download.pytorch.org/models/resnet152-b121ed2d.pth",
 }
 
-
+class Identity(nn.Module):
+    def forward(self, x):
+        return x
+    
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(
@@ -39,10 +42,14 @@ class BasicBlock(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None, group_norm=0):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
+        
         self.bn1 = norm2d(planes, group_norm)
+      
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
+        
         self.bn2 = norm2d(planes, group_norm)
+     
         self.downsample = downsample
         self.stride = stride
 
@@ -50,12 +57,16 @@ class BasicBlock(nn.Module):
         residual = x
 
         out = self.conv1(x)
+        
         out = self.bn1(out)
+ 
         out = self.relu(out)
 
         out = self.conv2(out)
+        
         out = self.bn2(out)
-
+     
+        
         if self.downsample is not None:
             residual = self.downsample(x)
 
@@ -71,13 +82,19 @@ class Bottleneck(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None, group_norm=0):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
+        
         self.bn1 = norm2d(planes, group_norm)
+    
         self.conv2 = nn.Conv2d(
             planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
         )
+        
         self.bn2 = norm2d(planes, group_norm)
+  
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
+
         self.bn3 = norm2d(planes * 4, group_norm)
+        
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -86,7 +103,9 @@ class Bottleneck(nn.Module):
         residual = x
 
         out = self.conv1(x)
+        
         out = self.bn1(out)
+   
         out = self.relu(out)
 
         out = self.conv2(out)
@@ -148,6 +167,8 @@ class ResNet(nn.Module):
     def _make_layer(self, block, planes, blocks, stride=1, group_norm=0):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
+            norm_lyr = norm2d(planes * block.expansion, group_norm)
+
             downsample = nn.Sequential(
                 nn.Conv2d(
                     self.inplanes,
@@ -156,7 +177,8 @@ class ResNet(nn.Module):
                     stride=stride,
                     bias=False,
                 ),
-                norm2d(planes * block.expansion, group_norm),
+                
+                norm_lyr
             )
 
         layers = []

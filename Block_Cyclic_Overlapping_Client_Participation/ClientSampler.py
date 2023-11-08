@@ -6,6 +6,9 @@ class ClientSampler:
     def __init__(self, args):
         self.args = args
 
+    def all_participate(self, round_idx, client_num_in_total):
+        return [client_index for client_index in range(client_num_in_total)]
+    
     def _client_sampling(self, round_idx, client_num_in_total):
         if client_num_in_total == self.args.client_num_per_round:
             client_indexes = [client_index for client_index in range(client_num_in_total)]

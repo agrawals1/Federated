@@ -42,7 +42,7 @@ class ModelTrainerCLS(ClientTrainer):
            
         elif args.client_optimizer == "CosAnnealing":
             optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=0)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=.0001)
         
         else:
             optimizer = torch.optim.Adam(
@@ -68,15 +68,15 @@ class ModelTrainerCLS(ClientTrainer):
                 optimizer.step()
                 if args.client_optimizer == "CosAnnealing":
                     scheduler.step()
-                # logging.info(
-                #     "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                #         epoch,
-                #         (batch_idx + 1) * args.batch_size,
-                #         len(train_data) * args.batch_size,
-                #         100.0 * (batch_idx + 1) / len(train_data),
-                #         loss.item(),
-                #     )
-                # )
+                logging.info(
+                    "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                        epoch,
+                        (batch_idx + 1) * args.batch_size,
+                        len(train_data) * args.batch_size,
+                        100.0 * (batch_idx + 1) / len(train_data),
+                        loss.item(),
+                    )
+                )
 
                 batch_loss.append(loss.item())
             if len(batch_loss) == 0:
@@ -125,18 +125,18 @@ class ModelTrainerCLS(ClientTrainer):
                 loss.backward()
 
                 # Uncommet this following line to avoid nan loss
-                # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
                 optimizer.step()
-                # logging.info(
-                #     "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                #         epoch,
-                #         (batch_idx + 1) * args.batch_size,
-                #         len(train_data) * args.batch_size,
-                #         100.0 * (batch_idx + 1) / len(train_data),
-                #         loss.item(),
-                #     )
-                # )
+                logging.info(
+                    "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                        epoch,
+                        (batch_idx + 1) * args.batch_size,
+                        len(train_data) * args.batch_size,
+                        100.0 * (batch_idx + 1) / len(train_data),
+                        loss.item(),
+                    )
+                )
                 batch_loss.append(loss.item())
                 current_steps += 1
                 if current_steps == args.local_iterations:

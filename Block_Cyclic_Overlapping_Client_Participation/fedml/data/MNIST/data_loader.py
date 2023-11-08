@@ -28,7 +28,7 @@ def distribute_test_data(test_dataset, num_clients) -> Dict[int, List[int]]:
 
 def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     client_num = len(stats) - 1
-    save_path = "/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/data/"
+    save_path = "/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/ClassAndSampleDistributionAmongClients2/"
     save_id = args.run_name
     
     fig, axs = plt.subplots(2, figsize=(15, 12))
@@ -61,17 +61,17 @@ def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     plt.show()
     
     
-def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, least_samples: int) -> Tuple[Dict[int, List[int]], Dict]:
+def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, least_samples: int = 20) -> Tuple[Dict[int, List[int]], Dict]:
     label_num = len(dataset.classes)
-    min_size = 0
     stats = {}
-
+    min_size = 0
     targets_numpy = np.array(dataset.targets, dtype=np.int32)
     data_idx_for_each_label = [
         np.where(targets_numpy == i)[0] for i in range(label_num)
     ]
 
     while min_size < least_samples:
+        # TODO: This loop may run forever. Fix this!
         data_indices = [[] for _ in range(client_num)]
         for k in range(label_num):
             np.random.shuffle(data_idx_for_each_label[k])
@@ -90,7 +90,8 @@ def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, leas
                     data_indices, np.split(data_idx_for_each_label[k], distrib)
                 )
             ]
-            min_size = min([len(idx_j) for idx_j in data_indices])
+        min_size  = min([len(idx_j) for idx_j in data_indices])
+            
 
     for i in range(client_num):
         stats[i] = {"x": None, "y": None}
@@ -215,7 +216,7 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
     
     # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, len(all_train_y)//(5*num_clients))
+    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, 20)
     plot_client_data_distribution(args, stats, 100)
     # Uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
@@ -308,6 +309,8 @@ def read_data_hetero(train_data_dir, test_data_dir, num_clients=7):
 
 
 def batch_data(args, data, batch_size):
+    
+    min_batch_size = 20
     """
     Splits data into batches of a specified size.
 
@@ -320,6 +323,8 @@ def batch_data(args, data, batch_size):
     Returns:
     - list: List of batches where each batch is a tuple (batched_x, batched_y).
     """
+    assert 2 <= min_batch_size < batch_size # min_batch_size should be between 2 and batch_size
+    
     data_x = data["x"]
     data_y = data["y"]
     
@@ -330,11 +335,28 @@ def batch_data(args, data, batch_size):
     np.random.set_state(rng_state)
     np.random.shuffle(data_y)
 
+    # Calculate total number of batches
+    n_batches = len(data_x) // batch_size
+    remainder = len(data_x) % batch_size
+    
+    # If the remainder is less than min_batch_size, n_batches-=1
+    if remainder >= min_batch_size:
+        n_batches += 1
+    
     # Create batches
     batched_data = []
-    for i in range(0, len(data_x), batch_size):
-        batched_x = data_x[i: i + batch_size]
-        batched_y = data_y[i: i + batch_size]
+    for i in range(n_batches):
+        start_idx = i * batch_size
+        if i == n_batches - 1:
+            if remainder >= min_batch_size:
+                end_idx = start_idx + remainder
+            else:
+                end_idx = start_idx + batch_size + remainder
+        else:
+            end_idx = start_idx + batch_size
+            
+        batched_x = data_x[start_idx: end_idx]
+        batched_y = data_y[start_idx: end_idx]
         batched_x, batched_y = ml_engine_adapter.convert_numpy_to_ml_engine_data_format(args, batched_x, batched_y)
         batched_data.append((batched_x, batched_y))
     
