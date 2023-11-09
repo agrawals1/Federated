@@ -4,4 +4,5 @@ fedml_config_[0-9]*_[0-9]*.yaml
 # But do not ignore fedml_config.yaml
 !fedml_config.yaml
 
+fed_data/
 wandb/

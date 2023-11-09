@@ -61,7 +61,9 @@ def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     plt.show()
     
     
-def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, least_samples: int = 20) -> Tuple[Dict[int, List[int]], Dict]:
+def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, least_samples: int = 20, seed: int = None) -> Tuple[Dict[int, List[int]], Dict]:
+    if seed is not None:
+        np.random.seed(seed)
     label_num = len(dataset.classes)
     stats = {}
     min_size = 0
@@ -216,7 +218,7 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
     
     # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, 20)
+    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, 20, seed=args.dirichlet_seed)
     plot_client_data_distribution(args, stats, 100)
     # Uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
