@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 sys.path.append(str(Path(__file__).parent.parent.resolve()))
 import fedml
 from fedml import FedMLRunner
