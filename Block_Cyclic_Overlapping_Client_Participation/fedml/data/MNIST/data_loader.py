@@ -29,7 +29,7 @@ def distribute_test_data(test_dataset, num_clients) -> Dict[int, List[int]]:
 def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     client_num = len(stats) - 1
     save_path = "/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/ClassAndSampleDistributionAmongClients2/"
-    save_id = args.run_name
+    save_id = str(args.alpha_dirichlet)
     
     fig, axs = plt.subplots(2, figsize=(15, 12))
 
