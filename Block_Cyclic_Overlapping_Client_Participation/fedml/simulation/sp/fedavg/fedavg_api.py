@@ -166,7 +166,8 @@ class FedAvgAPI(object):
                 client.model_trainer.set_model_params(updated_state_dict)
 
             mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
-            w = client.train(copy.deepcopy(w_global))
+            # w = client.train(copy.deepcopy(w_global))
+            w = client.train()
             if self.args.active:
                 client.model_trainer.set_last_aggregated_model_params(copy.deepcopy(w))
             mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
