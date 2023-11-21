@@ -107,8 +107,18 @@ class FedAvgAPI(object):
         mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
         mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
         mlops.log_round_info(self.args.comm_round, -1)
-
+        marker = 0
+        initial_rounds = self.args.comm_round
+        decay_factor = self.args.AdaptiveDecay
+        update_frequency = self.args.lr_update_freq
+        threshold = (initial_rounds - marker) / update_frequency
         for round_idx in range(self.args.comm_round):
+            wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
+            if (round_idx+1) >= threshold:
+                marker = threshold
+                threshold = marker + (initial_rounds-marker) / update_frequency
+                self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
+                
             logging.info("################Communication round : %s", round_idx)
 
             w_locals = self._train_clients_for_round(round_idx, w_global)
