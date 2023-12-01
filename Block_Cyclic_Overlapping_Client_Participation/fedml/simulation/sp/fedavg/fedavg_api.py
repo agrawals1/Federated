@@ -54,10 +54,10 @@ class FedAvgAPI(object):
         self._setup_clients(
             train_data_local_num_dict, train_data_local_dict, test_data_local_dict, copy.deepcopy(self.model_trainer),
         )
-        self.cycles = self.generate_cycles(self.args.client_num_in_total, self.args.client_num_per_round, self.args.overlap_num, self.args.comm_round)
-        self.part_count_cycle = [self.count_participations(cycle, self.args.client_num_in_total) for cycle in self.cycles]
+        self.cycle = self.generate_cycle(self.args.client_num_in_total, self.args.client_num_per_round, self.args.overlap_num)
+        self.part_count_cycle = self.count_participations(self.cycle, self.args.client_num_in_total)
         self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
-        self.total_cycles = len(self.cycles)
+        self.total_cycles = math.ceil(self.args.comm_round / len(self.cycle))
         
     def count_participations(self, cycle, client_num_in_total):
         # Initialize participation counts for each client
@@ -70,29 +70,27 @@ class FedAvgAPI(object):
 
         return participation_counts
     
-    def generate_cycles(self, client_num_in_total, client_num_per_round, overlap_num, total_rounds):
-        cycles = []
-        current_cycle = []
-        seen_clients = set()
+    def generate_cycle(self, client_num_in_total, client_num_per_round, overlap_num):
+        cycle = []
+        start_idx = 0
 
-        for round_idx in range(total_rounds):
-            # Generate client indexes for the current round
-            start_idx = (round_idx * (client_num_per_round - overlap_num)) % client_num_in_total
-            client_indexes = [(start_idx + i) % client_num_in_total for i in range(client_num_per_round)]
-            current_cycle.append(client_indexes)
-            seen_clients.update(client_indexes)
+        while True:
+            # Determine the end index for the current round, ensuring it does not exceed client_num_in_total
+            end_idx = min(start_idx + client_num_per_round, client_num_in_total)
 
-            # Check if all clients have been seen at least once
-            if len(seen_clients) == client_num_in_total:
-                cycles.append(current_cycle)
-                current_cycle = []
-                seen_clients.clear()
+            # Create the client group for the current round
+            client_indexes = list(range(start_idx, end_idx))
+            cycle.append(client_indexes)
 
-        # Ensure any remaining rounds are added as a cycle
-        if current_cycle:
-            cycles.append(current_cycle)
+            # Break the loop if the last client has been encountered in this round
+            if client_num_in_total - 1 in client_indexes:
+                break
 
-        return cycles
+            # Calculate the start index for the next round based on the overlap
+            start_idx = start_idx + client_num_per_round - overlap_num
+
+        return cycle  # Return a list containing only the first cycle
+
 
     
     
@@ -190,14 +188,17 @@ class FedAvgAPI(object):
         decay_factor = self.args.AdaptiveDecay
         update_frequency = self.args.lr_update_freq
         threshold = (initial_cycles - marker) / update_frequency
-        for cycle_idx, cycle in enumerate(self.cycles):
+        round_idx = 0
+        for cycle_idx in range(self.total_cycles):
             
             if (cycle_idx+1) >= threshold:
                 marker = threshold
                 threshold = marker + (initial_cycles-marker) / update_frequency
                 self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
             logging.info("Starting Cycle %d", cycle_idx)
-            for round_idx, client_group in enumerate(cycle):
+            wandb.log({"Cycle_num": cycle_idx, "round": round_idx}, step=round_idx)
+            for client_group in self.cycle:
+                
                 wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
                 logging.info("Communication Round %d in Cycle %d", round_idx, cycle_idx)
                 mlops.log_round_info(self.args.comm_round, round_idx)
@@ -213,7 +214,7 @@ class FedAvgAPI(object):
 
                 # Test results based on conditions
                 self._test_models_based_on_conditions(round_idx, w_global)
-            
+                round_idx += 1
             self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
         mlops.log_round_info(self.args.comm_round, -1)
         mlops.log_training_finished_status()
@@ -229,7 +230,7 @@ class FedAvgAPI(object):
                     self.test_data_local_dict[client_id],
                     self.train_data_local_num_dict[client_id]
                 )
-            part_cnt = self.part_count_cycle[cycle_idx][client_id]
+            part_cnt = self.part_count_cycle[client_id]
             current_part_num = self.currently_part_in[client_id]
             w = client.train_participation_normalised(part_cnt, current_part_num, w_global) 
             w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
