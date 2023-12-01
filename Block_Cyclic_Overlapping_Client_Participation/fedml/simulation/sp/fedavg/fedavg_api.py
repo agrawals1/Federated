@@ -2,7 +2,7 @@ import copy
 import logging
 import random
 
-import numpy as np
+import math
 import torch
 import wandb
 
@@ -54,7 +54,48 @@ class FedAvgAPI(object):
         self._setup_clients(
             train_data_local_num_dict, train_data_local_dict, test_data_local_dict, copy.deepcopy(self.model_trainer),
         )
+        self.cycles = self.generate_cycles(self.args.client_num_in_total, self.args.client_num_per_round, self.args.overlap_num, self.args.comm_round)
+        self.part_count_cycle = [self.count_participations(cycle, self.args.client_num_in_total) for cycle in self.cycles]
+        self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
+        self.total_cycles = len(self.cycles)
+        
+    def count_participations(self, cycle, client_num_in_total):
+        # Initialize participation counts for each client
+        participation_counts = {client_id: 0 for client_id in range(client_num_in_total)}
 
+        # Count participations for each client in the cycle
+        for client_group in cycle:
+            for client_id in client_group:
+                participation_counts[client_id] += 1
+
+        return participation_counts
+    
+    def generate_cycles(self, client_num_in_total, client_num_per_round, overlap_num, total_rounds):
+        cycles = []
+        current_cycle = []
+        seen_clients = set()
+
+        for round_idx in range(total_rounds):
+            # Generate client indexes for the current round
+            start_idx = (round_idx * (client_num_per_round - overlap_num)) % client_num_in_total
+            client_indexes = [(start_idx + i) % client_num_in_total for i in range(client_num_per_round)]
+            current_cycle.append(client_indexes)
+            seen_clients.update(client_indexes)
+
+            # Check if all clients have been seen at least once
+            if len(seen_clients) == client_num_in_total:
+                cycles.append(current_cycle)
+                current_cycle = []
+                seen_clients.clear()
+
+        # Ensure any remaining rounds are added as a cycle
+        if current_cycle:
+            cycles.append(current_cycle)
+
+        return cycles
+
+    
+    
     def _setup_clients(
         self, train_data_local_num_dict, train_data_local_dict, test_data_local_dict, model_trainer,
     ):
@@ -112,6 +153,7 @@ class FedAvgAPI(object):
         decay_factor = self.args.AdaptiveDecay
         update_frequency = self.args.lr_update_freq
         threshold = (initial_rounds - marker) / update_frequency
+        
         for round_idx in range(self.args.comm_round):
             wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
             if (round_idx+1) >= threshold:
@@ -136,6 +178,65 @@ class FedAvgAPI(object):
 
         mlops.log_training_finished_status()
         mlops.log_aggregation_finished_status()
+        
+    def train_cycle(self):
+        logging.info("self.model_trainer = %s", self.model_trainer)
+        w_global = self.model_trainer.get_model_params()
+        
+        mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
+        mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
+        marker = 0
+        initial_cycles = self.total_cycles
+        decay_factor = self.args.AdaptiveDecay
+        update_frequency = self.args.lr_update_freq
+        threshold = (initial_cycles - marker) / update_frequency
+        for cycle_idx, cycle in enumerate(self.cycles):
+            
+            if (cycle_idx+1) >= threshold:
+                marker = threshold
+                threshold = marker + (initial_cycles-marker) / update_frequency
+                self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
+            logging.info("Starting Cycle %d", cycle_idx)
+            for round_idx, client_group in enumerate(cycle):
+                wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
+                logging.info("Communication Round %d in Cycle %d", round_idx, cycle_idx)
+                mlops.log_round_info(self.args.comm_round, round_idx)
+
+                # Train clients in the current group
+                w_locals = self._train_clients_for_group(client_group, w_global, cycle_idx)
+
+                # Update global weights
+                mlops.event("agg", event_started=True, event_value=str(round_idx))
+                w_global = self._aggregate(w_locals)
+                self.model_trainer.set_model_params(w_global)
+                mlops.event("agg", event_started=False, event_value=str(round_idx))
+
+                # Test results based on conditions
+                self._test_models_based_on_conditions(round_idx, w_global)
+            
+            self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
+        mlops.log_round_info(self.args.comm_round, -1)
+        mlops.log_training_finished_status()
+        mlops.log_aggregation_finished_status()
+
+    def _train_clients_for_group(self, client_group, w_global, cycle_idx):
+        w_locals = []
+        for idx, client_id in enumerate(client_group):
+            client = self.client_list[idx]
+            client.update_local_dataset(
+                    client_id,
+                    self.train_data_local_dict[client_id],
+                    self.test_data_local_dict[client_id],
+                    self.train_data_local_num_dict[client_id]
+                )
+            part_cnt = self.part_count_cycle[cycle_idx][client_id]
+            current_part_num = self.currently_part_in[client_id]
+            w = client.train_participation_normalised(part_cnt, current_part_num, w_global) 
+            w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+            self.currently_part_in[client_id] += 1
+        return w_locals
+
+        
 
     def _train_clients_for_round(self, round_idx, w_global):
         w_locals = []
@@ -175,16 +276,6 @@ class FedAvgAPI(object):
             w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
         return w_locals
 
-    # def _test_models_based_on_conditions(self, round_idx, w_global):
-    #     if round_idx == self.args.comm_round - 1:
-    #         self._local_test_on_all_clients(round_idx)
-    #         self._test_global_model_on_global_data(w_global, round_idx)
-    #     elif round_idx % self.args.frequency_of_the_test == 0:
-    #         if self.args.dataset.startswith("stackoverflow"):
-    #             self._local_test_on_validation_set(round_idx)
-    #         else:
-    #             self._local_test_on_all_clients(round_idx)
-    #             self._test_global_model_on_global_data(w_global, round_idx)
     
     def _test_models_based_on_conditions(self, round_idx, w_global):
         if round_idx == self.args.comm_round - 1 or round_idx % self.args.frequency_of_the_test == 0:
@@ -319,10 +410,7 @@ class FedAvgAPI(object):
             metrics = client.local_test(dataset_type)
             return metrics["test_total"], metrics["test_correct"], metrics["test_loss"]
 
-        if self.args.active:
-            clients_to_test = self.client_list  ####################### Check this Logic #########################################
-        else:
-            clients_to_test = self.client_list
+        clients_to_test = self.client_list
 
         for idx, client in enumerate(clients_to_test):
             if not self.args.active and self.test_data_local_dict[idx] is None:

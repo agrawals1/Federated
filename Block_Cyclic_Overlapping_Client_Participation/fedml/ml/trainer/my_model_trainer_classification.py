@@ -4,10 +4,10 @@ from torch import nn
 from ...core.alg_frame.client_trainer import ClientTrainer
 from ...core.dp.fedml_differential_privacy import FedMLDifferentialPrivacy
 import logging
-import copy
+import random
 import logging
 import random
-
+import math
 # from functorch import grad_and_value, make_functional, vmap
 
 
@@ -88,7 +88,7 @@ class ModelTrainerCLS(ClientTrainer):
                     self.id, epoch, sum(epoch_loss) / len(epoch_loss)
                 )
             )
-
+            
     def train_iterations(self, train_data, device, args):
         model = self.model
 

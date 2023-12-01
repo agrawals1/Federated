@@ -17,18 +17,19 @@ batch_sizes = [64]
 learning_rates = [0.1] 
 decays = [1e-5]
 # betas = [0.05, 0.1, 0.5, 10.0]  # parameter for dirichlet distribution
-betas = [0.5]
-overlaps = [0, 1, 3, 5, 7, 9] # Client overlap count
-comm_rounds = [500]
+betas = [10.0]
+overlaps = [1, 3, 5, 7, 9] # Client overlap count
+comm_rounds = [500, 1000]
 # seeds = [3087732978, 918854724, 2152041540, 548193746, 993522575, 1531166731, 3136455588, 3525945833, 2018934764, 1770634816]
-seeds = [3087732978, 918854724, 2152041540, 548193746]
+seeds = [993522575, 1531166731]
 group_norms = [0]
 AdaptiveDecays = [10]
-lr_update_freqs = [5]
+lr_update_freqs = [2]
+Remark = "Participation Normalised"
 
 def run_federation_with_semaphore(semaphore, beta, overlap, gpu_id, round, lr, bs, decay, seed=6967677, group_norm=0, freq=4, decay_fact=4):
     epochs = 2 if round == 500 else (1 if round == 1000 else 4)
-    run_name = f"E:{epochs}_R:{round}_Dir:{beta}_cyclic_overlap_pattern_Overlap:{overlap}"
+    run_name = f"E:{epochs}_R:{round}_Dir:{beta}_cyclic_overlap_pattern_Overlap:{overlap}_Remark:{Remark}"
     try:
         run_federation(beta, overlap, gpu_id, round, lr, bs, decay, seed, group_norm, freq, decay_fact, epochs, run_name)
     finally:
@@ -88,7 +89,7 @@ def check_gpu_memory(gpu_id, required_memory = 1024*1024*1024):
                 
 
 def update_and_run_config(gpu_id):
-    max_processes = 10
+    max_processes = 50
     semaphore = Semaphore(max_processes)  # Controls the number of active processes
     processes = []
     
