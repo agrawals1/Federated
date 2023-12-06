@@ -183,22 +183,22 @@ class FedAvgAPI(object):
         
         mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
         mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
+        
+        round_idx = 0
         marker = 0
-        initial_cycles = self.total_cycles
+        initial_rounds = self.args.comm_round
         decay_factor = self.args.AdaptiveDecay
         update_frequency = self.args.lr_update_freq
-        threshold = (initial_cycles - marker) / update_frequency
-        round_idx = 0
-        for cycle_idx in range(self.total_cycles):
-            
-            if (cycle_idx+1) >= threshold:
-                marker = threshold
-                threshold = marker + (initial_cycles-marker) / update_frequency
-                self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
+        threshold = (initial_rounds - marker) / update_frequency
+        for cycle_idx in range(self.total_cycles):          
+           
             logging.info("Starting Cycle %d", cycle_idx)
             wandb.log({"Cycle_num": cycle_idx, "round": round_idx}, step=round_idx)
             for client_group in self.cycle:
-                
+                if (round_idx+1) >= threshold:
+                    marker = threshold
+                    threshold = marker + (initial_rounds-marker) / update_frequency
+                    self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
                 wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
                 logging.info("Communication Round %d in Cycle %d", round_idx, cycle_idx)
                 mlops.log_round_info(self.args.comm_round, round_idx)
