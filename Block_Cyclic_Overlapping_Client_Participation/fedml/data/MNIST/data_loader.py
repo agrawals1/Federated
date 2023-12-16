@@ -12,7 +12,9 @@ from collections import Counter
 from typing import Dict, List, Tuple
 import numpy as np
 from torch.utils.data import Dataset
+from pathlib import Path
 
+current_dir = Path(__file__).resolve()
 
 def distribute_test_data(test_dataset, num_clients) -> Dict[int, List[int]]:
     all_indices = list(range(len(test_dataset)))
@@ -28,7 +30,8 @@ def distribute_test_data(test_dataset, num_clients) -> Dict[int, List[int]]:
 
 def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     client_num = len(stats) - 1
-    save_path = "/home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/ClassAndSampleDistributionAmongClients2/"
+    ggp_dir = current_dir.parents[2]
+    save_path = os.path.join(str(ggp_dir), "ClassAndSampleDistributionAmongClients")
     save_id = str(args.alpha_dirichlet)
     
     fig, axs = plt.subplots(2, figsize=(15, 12))
@@ -149,47 +152,52 @@ def process_dataset(train_dataset, test_dataset):
     return all_train_x, all_train_y, all_test_x, all_test_y
 
 def load_dataset(dataset_name, transform):
-    """Load a dataset based on its name.
+    """Load a dataset based on its name and get the number of unique classes.
     
     Parameters:
     - dataset_name (str): Name of the dataset.
-    - root_dir (str): Root directory for storing dataset files.
     - transform: Image transformations to apply.
     
     Returns:
-    - tuple: Train and test datasets.
+    - tuple: Train dataset, test dataset, and number of classes.
     """
     
     root_dir = "./home/shubham/fed_data/"
-    # Dictionary mapping dataset names to their corresponding classes and directories
+    # Dictionary mapping dataset names to their corresponding classes, directories, and number of classes
     dataset_classes = {
         "MNIST": {
             "class": datasets.MNIST,
-            "dir": "MNIST"
+            "dir": "MNIST",
+            "num_classes": 10
         },
         "FashionMNIST": {
             "class": datasets.FashionMNIST,
-            "dir": "FashionMNIST"
+            "dir": "FashionMNIST",
+            "num_classes": 10
         },
         "CIFAR100": {
             "class": datasets.CIFAR100,
-            "dir": "CIFAR100"
+            "dir": "CIFAR100",
+            "num_classes": 100
         },
         "CIFAR10": {
             "class": datasets.CIFAR10,
-            "dir": "CIFAR10"
+            "dir": "CIFAR10",
+            "num_classes": 10
         }
     }
     
-    # Get the relevant class and directory
-    dataset_class = dataset_classes.get(dataset_name, dataset_classes["CIFAR100"])["class"]
-    dataset_dir = dataset_classes.get(dataset_name, dataset_classes["CIFAR100"])["dir"]
+    # Get the relevant class, directory, and number of classes
+    dataset_info = dataset_classes.get(dataset_name, dataset_classes["CIFAR100"])
+    dataset_class = dataset_info["class"]
+    dataset_dir = dataset_info["dir"]
+    num_classes = dataset_info["num_classes"]
     
     # Load the datasets
     train_dataset = dataset_class(root=os.path.join(root_dir, dataset_dir), train=True, transform=transform, download=True)
     test_dataset = dataset_class(root=os.path.join(root_dir, dataset_dir), train=False, transform=transform, download=True)
     
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, num_classes
 
 def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     """
@@ -213,13 +221,13 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     """
     transform = transforms.Compose([transforms.ToTensor()])
     
-    train_dataset, test_dataset = load_dataset(dataset_name, transform)
+    train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 
     all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
     
     # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, 20, seed=args.dirichlet_seed)
-    plot_client_data_distribution(args, stats, 100)
+    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 20, seed=args.dirichlet_seed)
+    plot_client_data_distribution(args, stats, num_classes)
     # Uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
     
@@ -237,7 +245,7 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     clients = list(range(num_clients))
     groups = []
 
-    return clients, groups, train_data, test_data
+    return clients, groups, train_data, test_data, num_classes
 
 # Note: We have provided placeholders for "news" dataset's lengths. We will need additional information to handle them properly.
 
@@ -394,7 +402,7 @@ def load_partition_data(args):
     - tuple: Tuple containing various data-related metrics and structures.
     """
     # Load and partition data
-    users, groups, train_data, test_data = read_data_dirichlet(args, args.dataset, args.alpha_dirichlet, args.client_num_in_total)
+    users, groups, train_data, test_data, num_classes = read_data_dirichlet(args, args.dataset, args.alpha_dirichlet, args.client_num_in_total)
 
     train_data_num = sum([len(data["x"]) for data in train_data.values()])
     test_data_num = sum([len(data["x"]) for data in test_data.values()])
@@ -410,7 +418,7 @@ def load_partition_data(args):
     # Data stats
     train_data_local_num_dict = {client: len(data["x"]) for client, data in train_data.items()}
     client_num = len(users)
-    class_num = 100  # This seems to be a fixed value, but you might want to determine this dynamically based on the data
+    class_num = num_classes 
 
     return (
         client_num,
