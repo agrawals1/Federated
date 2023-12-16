@@ -3,13 +3,13 @@ comm_args:
 common_args:
   active: 0
   alpha_active: 1.0
-  alpha_dirichlet: 0.1
+  alpha_dirichlet: 0.5
   dirichlet_seed: 2152041540
   config_version: dev
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_COCP
-  overlap_num: 9
+  overlap_num: 7
   overlap_percentage: 1.0
   random_seed: 0
   sampling_fun: client_sampling_cyclic_overlap_pattern
@@ -17,10 +17,11 @@ common_args:
   var_epoch: 0
   group_norm_size: 0
   AdaptiveDecay: 10
-  lr_update_freq: 5
+  lr_update_freq: 2
+  group_wise_models: false
 data_args:
   data_cache_dir: ~/fedml_data
-  dataset: CIFAR100
+  dataset: CIFAR10
   partition_alpha: 0.5
   partition_method: hetero
 device_args:
@@ -31,16 +32,16 @@ model_args:
 tracking_args:
   enable_tracking: false
   enable_wandb: true
-  run_name: Testing_Restricted_Iteration_99
+  run_name: Dir_0.5_Overlap_7_Batch_64_cyclic_overlap_pattern_Cheating
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
-  wandb_project: Cyclic and Overlapping Client Participation(Federated) 6
+  wandb_project: Question1
 train_args:
-  batch_size: 32
+  batch_size: 64
   client_id_list: '[]'
   client_num_in_total: 100
   client_num_per_round: 10
-  client_optimizer: CosAnnealing
+  client_optimizer: sgd
   comm_round: 500
   epochs: 2
   federated_optimizer: FedAvg

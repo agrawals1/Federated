@@ -7,3 +7,5 @@ fed_data/
 wandb/
 __pycache__/
 anaconda.sh 
+.log
+latest-run/
