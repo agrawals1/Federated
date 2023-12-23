@@ -220,13 +220,9 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
                           representing testing data features and labels respectively for each client.
     """
     transform = transforms.Compose([
-    transforms.RandomHorizontalFlip(),   # Randomly flip the images horizontally
-    transforms.RandomRotation(10),       # Randomly rotate the images by 10 degrees
-    transforms.RandomCrop(32, padding=4),# Randomly crop the images and pad if needed
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), # Randomly change brightness, contrast, and saturation
-    transforms.ToTensor(),               # Convert to tensor (required for training)
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
-])
+        transforms.ToTensor(),               # Convert to tensor (required for training)
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
+                                    ])
     
     train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 
