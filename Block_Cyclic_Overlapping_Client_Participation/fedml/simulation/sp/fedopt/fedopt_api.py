@@ -30,10 +30,6 @@ class FedOptAPI(object):
         self.val_global = None
         self.train_data_num_in_total = train_data_num
         self.test_data_num_in_total = test_data_num
-
-        # self.model_global = model
-        # self.model_global.train()
-
         self.client_list = []
         self.train_data_local_num_dict = train_data_local_num_dict
         self.train_data_local_dict = train_data_local_dict

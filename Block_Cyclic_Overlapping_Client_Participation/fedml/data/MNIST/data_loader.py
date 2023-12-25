@@ -64,19 +64,18 @@ def plot_client_data_distribution(args, stats: Dict, num_classes: int) -> None:
     plt.show()
     
     
-def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, least_samples: int = 20, seed: int = None) -> Tuple[Dict[int, List[int]], Dict]:
+def dirichlet_distribution(labels: List[int], client_num: int, alpha: float, least_samples: int = 20, seed: int = None) -> Tuple[Dict[int, List[int]], Dict]:
     if seed is not None:
         np.random.seed(seed)
-    label_num = len(dataset.classes)
+    label_num = len(set(labels))  # Number of unique labels
     stats = {}
     min_size = 0
-    targets_numpy = np.array(dataset.targets, dtype=np.int32)
+    targets_numpy = np.array(labels, dtype=np.int32)
     data_idx_for_each_label = [
         np.where(targets_numpy == i)[0] for i in range(label_num)
     ]
 
     while min_size < least_samples:
-        # TODO: This loop may run forever. Fix this!
         data_indices = [[] for _ in range(client_num)]
         for k in range(label_num):
             np.random.shuffle(data_idx_for_each_label[k])
@@ -96,7 +95,6 @@ def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, leas
                 )
             ]
         min_size  = min([len(idx_j) for idx_j in data_indices])
-            
 
     for i in range(client_num):
         stats[i] = {"x": None, "y": None}
@@ -105,7 +103,7 @@ def dirichlet_distribution(dataset: Dataset, client_num: int, alpha: float, leas
 
     num_samples = np.array(list(map(lambda stat_i: stat_i["x"], stats.values())))
     stats["sample per client"] = {
-        "std": num_samples.mean(),
+        "mean": num_samples.mean(),
         "stddev": num_samples.std(),
     }
 
@@ -130,26 +128,13 @@ def distribute_classes_among_clients(num_clients: int, total_classes: int) -> Li
 
     return client_data_division
 
-def process_dataset(train_dataset, test_dataset):
+def process_combined_dataset(train_dataset, test_dataset):
     """
-    Helper function to process datasets and extract necessary information.
-    
-    Parameters:
-    - train_dataset (Dataset): The training dataset to be processed.
-    - test_dataset (Dataset): The testing dataset to be processed.
-    
-    Returns:
-    - Tuple containing:
-      - all_train_x: List of training data features.
-      - all_train_y: List of training data labels.
-      - all_test_x: List of testing data features.
-      - all_test_y: List of testing data labels.
+    Combine and process training and testing datasets.
     """
-    all_train_x = [img.numpy().tolist() for img, _ in train_dataset]
-    all_train_y = [label for _, label in train_dataset]
-    all_test_x = [img.numpy().tolist() for img, _ in test_dataset]
-    all_test_y = [label for _, label in test_dataset]
-    return all_train_x, all_train_y, all_test_x, all_test_y
+    all_x = [img.numpy().tolist() for img, _ in train_dataset] + [img.numpy().tolist() for img, _ in test_dataset]
+    all_y = [label for _, label in train_dataset] + [label for _, label in test_dataset]
+    return all_x, all_y
 
 def load_dataset(dataset_name, transform):
     """Load a dataset based on its name and get the number of unique classes.
@@ -200,50 +185,30 @@ def load_dataset(dataset_name, transform):
     return train_dataset, test_dataset, num_classes
 
 def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
-    """
-    Reads and processes heterogeneous training and testing data for a given number of clients using Dirichlet distribution.
-
-    Parameters:
-    - args: Arguments containing run-specific details (e.g., run_name).
-    - dataset_name (str): Name of the dataset ('mnist', 'fashionMnist', 'cifar100', 'cifar10', or 'news').
-    - root_dir (str): Root directory where dataset files are stored.
-    - alpha: A parameter for the Dirichlet distribution.
-    - num_clients (int, optional): Number of clients for which the data should be processed. Default is 7.
-
-    Returns:
-    - Tuple containing:
-      - clients (list of int): List of client indices.
-      - groups (list): Currently, an empty list is returned. Can be expanded for further use if needed.
-      - train_data (dict): Dictionary where keys are client indices and values are dictionaries with 'x' and 'y' 
-                           representing training data features and labels respectively for each client.
-      - test_data (dict): Dictionary where keys are client indices and values are dictionaries with 'x' and 'y' 
-                          representing testing data features and labels respectively for each client.
-    """
     transform = transforms.Compose([
-        transforms.ToTensor(),               # Convert to tensor (required for training)
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
-                                    ])
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
     
     train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 
-    all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
+    all_data_x, all_data_y = process_combined_dataset(train_dataset, test_dataset)
     
-    # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 20, seed=args.dirichlet_seed)
+    # Applying Dirichlet distribution to the combined dataset
+    client_idcs, stats = dirichlet_distribution(all_data_y, num_clients, alpha, least_samples=32, seed=args.dirichlet_seed)
     plot_client_data_distribution(args, stats, num_classes)
-    # Uniform distribution of test data
-    test_client_idcs = distribute_test_data(test_dataset, num_clients)
     
     # Construct data dictionaries
     train_data = {}
     test_data = {}
-    for client_idx, idcs in train_client_idcs.items():
-        train_data[client_idx] = {"x": [all_train_x[i] for i in idcs], "y": [all_train_y[i] for i in idcs]}
-        # TODO: Handle "news" dataset's lengths if provided
+    for client_idx, idcs in client_idcs.items():
+        client_data_x = [all_data_x[i] for i in idcs]
+        client_data_y = [all_data_y[i] for i in idcs]
 
-    for client_idx, idcs in test_client_idcs.items():
-        test_data[client_idx] = {"x": [all_test_x[i] for i in idcs], "y": [all_test_y[i] for i in idcs]}
-        # TODO: Handle "news" dataset's lengths if provided
+        # Split data into train and test sets for each client
+        split_idx = int(len(client_data_x) * 0.8)  # Assuming an 80-20 train-test split
+        train_data[client_idx] = {"x": client_data_x[:split_idx], "y": client_data_y[:split_idx]}
+        test_data[client_idx] = {"x": client_data_x[split_idx:], "y": client_data_y[split_idx:]}
 
     clients = list(range(num_clients))
     groups = []
