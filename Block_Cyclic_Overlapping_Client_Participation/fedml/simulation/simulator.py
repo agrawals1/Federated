@@ -64,7 +64,7 @@ class SimulatorSingleProcess:
             raise Exception("Exception")
 
     def run(self):
-        self.fl_trainer.train()
+        self.fl_trainer.train_cycle()
 
 
 class SimulatorMPI:

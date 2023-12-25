@@ -186,16 +186,19 @@ def load_dataset(dataset_name, transform):
 
 def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+
+    transforms.ToTensor(),               # Convert to tensor (required for training)
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
+])
+
     
     train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 
     all_data_x, all_data_y = process_combined_dataset(train_dataset, test_dataset)
-    
-    # Applying Dirichlet distribution to the combined dataset
-    client_idcs, stats = dirichlet_distribution(all_data_y, num_clients, alpha, least_samples=32, seed=args.dirichlet_seed)
+ 
+    # Splitting data using Dirichlet distribution
+    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 32, seed=args.dirichlet_seed)
+
     plot_client_data_distribution(args, stats, num_classes)
     
     # Construct data dictionaries

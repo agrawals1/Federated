@@ -18,7 +18,8 @@ common_args:
   group_norm_size: 0
   AdaptiveDecay: 10.0
   lr_update_freq: 10
-  group_wise_models: False
+  group_wise_models: True
+
 data_args:
   data_cache_dir: ~/fedml_data
   dataset: CIFAR100
@@ -32,7 +33,7 @@ model_args:
 tracking_args:
   enable_tracking: False
   enable_wandb: True
-  run_name: Dir:100.0_Strategy:client_sampling_cyclic_overlap_pattern:Dataset:CIFAR100_Remark:Lot_Of_Changes
+  run_name: Correcting_Broken_Code_1
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_project: Test
