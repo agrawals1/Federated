@@ -3,13 +3,13 @@ comm_args:
 common_args:
   active: 0
   alpha_active: 1.0
-  alpha_dirichlet: 0.1
+  alpha_dirichlet: 100.0
   dirichlet_seed: 2152041540
   config_version: dev
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_COCP
-  overlap_num: 9
+  overlap_num: 3
   overlap_percentage: 1.0
   random_seed: 0
   sampling_fun: client_sampling_cyclic_overlap_pattern
@@ -17,7 +17,8 @@ common_args:
   var_epoch: 0
   group_norm_size: 0
   AdaptiveDecay: 10
-  lr_update_freq: 5
+  lr_update_freq: 10
+  group_wise_models: True
 data_args:
   data_cache_dir: ~/fedml_data
   dataset: CIFAR100
@@ -25,16 +26,16 @@ data_args:
   partition_method: hetero
 device_args:
   gpu_id: 1
-  using_gpu: true
+  using_gpu: True
 model_args:
   model: RESNET_18
 tracking_args:
-  enable_tracking: false
-  enable_wandb: true
-  run_name: Testing_Restricted_Iteration_99
+  enable_tracking: False
+  enable_wandb: True
+  run_name: Correcting_Broken_Code_1
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
-  wandb_project: Cyclic and Overlapping Client Participation(Federated) 6
+  wandb_project: Test
 train_args:
   batch_size: 32
   client_id_list: '[]'

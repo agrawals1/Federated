@@ -44,7 +44,7 @@ class Client:
 
         # Select the slice of training data for the current part
         train_data_slice = train_data[start_idx:end_idx]
-        # self.model_trainer.set_model_params(w_global)
+        self.model_trainer.set_model_params(w_global)
         # Train the model on the selected data slice
         self.model_trainer.train(train_data_slice, self.device, self.args)
 

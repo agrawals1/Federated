@@ -220,10 +220,6 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
                           representing testing data features and labels respectively for each client.
     """
     transform = transforms.Compose([
-    transforms.RandomHorizontalFlip(),   # Randomly flip the images horizontally
-    transforms.RandomRotation(10),       # Randomly rotate the images by 10 degrees
-    transforms.RandomCrop(32, padding=4),# Randomly crop the images and pad if needed
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), # Randomly change brightness, contrast, and saturation
     transforms.ToTensor(),               # Convert to tensor (required for training)
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
 ])
@@ -233,7 +229,7 @@ def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
     
     # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 20, seed=args.dirichlet_seed)
+    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 32, seed=args.dirichlet_seed)
     plot_client_data_distribution(args, stats, num_classes)
     # Uniform distribution of test data
     test_client_idcs = distribute_test_data(test_dataset, num_clients)
