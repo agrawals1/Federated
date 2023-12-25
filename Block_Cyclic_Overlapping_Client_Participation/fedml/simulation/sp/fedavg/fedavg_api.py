@@ -12,6 +12,7 @@ from .client import Client
 from collections import OrderedDict
 from ClientSampler import ClientSampler
 import copy
+from .optrepo import OptRepo
 
 class FedAvgAPI(object):
     def __init__(self, args, device, dataset, model):
@@ -48,12 +49,12 @@ class FedAvgAPI(object):
 
         logging.info("model = {}".format(model))
         self.model_trainer = create_model_trainer(model,copy.deepcopy(model),args)
-        self.model = model
+        self._instanciate_opt()
         logging.info("self.model_trainer = {}".format(self.model_trainer))
         self.participation_counts = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
         self.group_ids = {client_id: [] for client_id in range(self.args.client_num_in_total)}
         self.cycle = self.generate_cycle(self.args.client_num_in_total, self.args.client_num_per_round, self.args.overlap_num)
-        self.count_participations(self.cycle, self.args.client_num_in_total)
+        self.count_participations(self.cycle)
         self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
         self.total_cycles = math.ceil(self.args.comm_round / len(self.cycle))
         if self.args.group_wise_models:
@@ -63,14 +64,13 @@ class FedAvgAPI(object):
             train_data_local_num_dict, train_data_local_dict, test_data_local_dict, copy.deepcopy(self.model_trainer),
         )
                 
-    def count_participations(self, cycle, client_num_in_total):
+    def count_participations(self, cycle):
        
         # Count participations for each client in the cycle
         for group_id, client_group in enumerate(cycle):
             for client_id in client_group:
                 self.participation_counts[client_id] += 1
                 self.group_ids[client_id].append(group_id)
-
     
     def generate_cycle(self, client_num_in_total, client_num_per_round, overlap_num):
         cycle = []
@@ -79,22 +79,16 @@ class FedAvgAPI(object):
         while True:
             # Determine the end index for the current round, ensuring it does not exceed client_num_in_total
             end_idx = min(start_idx + client_num_per_round, client_num_in_total)
-
             # Create the client group for the current round
             client_indexes = list(range(start_idx, end_idx))
             cycle.append(client_indexes)
-
             # Break the loop if the last client has been encountered in this round
             if client_num_in_total - 1 in client_indexes:
                 break
-
             # Calculate the start index for the next round based on the overlap
             start_idx = start_idx + client_num_per_round - overlap_num
-
-        return cycle  # Return a list containing only the first cycle
-
-
-    
+            
+        return cycle  # Return a list containing only the first cycle    
     
     def _setup_clients(
         self, train_data_local_num_dict, train_data_local_dict, test_data_local_dict, model_trainer,
@@ -142,11 +136,16 @@ class FedAvgAPI(object):
             result[key] = (val + alpha*dict2[key])
         return result
     
-
+    def _instanciate_opt(self):
+        self.opt = OptRepo.name2cls(self.args.server_optimizer)(
+            self.model_trainer.model.parameters(),
+            lr=self.args.server_lr,
+            # momentum=0.9 # for fedavgm
+            eps = 1e-3 #for adaptive optimizer
+        )
+    
     def train(self):
-        logging.info("self.model_trainer = %s", self.model_trainer)
-        w_global = self.model_trainer.get_model_params()
-        
+        logging.info("self.model_trainer = %s", self.model_trainer)        
         mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
         mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
         mlops.log_round_info(self.args.comm_round, -1)
@@ -157,6 +156,8 @@ class FedAvgAPI(object):
         threshold = (initial_rounds - marker) / update_frequency
         
         for round_idx in range(self.args.comm_round):
+            w_locals = []
+            w_global = self.model_trainer.get_model_params()
             wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx}, step=round_idx)
             if (round_idx+1) >= threshold:
                 marker = threshold
@@ -165,26 +166,29 @@ class FedAvgAPI(object):
                 
             logging.info("################Communication round : %s", round_idx)
 
-            w_locals = self._train_clients_for_round(round_idx, w_global)
-
-            # Update global weights
-            mlops.event("agg", event_started=True, event_value=str(round_idx))
-            w_global = self._aggregate(w_locals)
-            self.model_trainer.set_model_params(w_global)
+            w_locals = self._train_clients_for_round(round_idx, w_global)          
+            mlops.event("agg", event_started=True, event_value=str(round_idx))       
+            # reset weight after standalone simulation
+            self.model_trainer.set_model_params(w_global) 
+            w_avg = self._aggregate(w_locals)
+            # server optimizer
+            self.opt.zero_grad()
+            opt_state = self.opt.state_dict()
+            self._set_model_global_grads(w_avg)
+            self._instanciate_opt()
+            self.opt.load_state_dict(opt_state)
+            self.opt.step()          
             mlops.event("agg", event_started=False, event_value=str(round_idx))
 
             # Test results based on conditions
             self._test_models_based_on_conditions(round_idx, w_global)
-
             mlops.log_round_info(self.args.comm_round, round_idx)
 
         mlops.log_training_finished_status()
         mlops.log_aggregation_finished_status()
         
     def train_cycle(self):
-        logging.info("self.model_trainer = %s", self.model_trainer)
-        w_global = self.model_trainer.get_model_params()
-        
+        logging.info("self.model_trainer = %s", self.model_trainer)      
         mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
         mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
         
@@ -194,29 +198,45 @@ class FedAvgAPI(object):
         decay_factor = self.args.AdaptiveDecay
         update_frequency = self.args.lr_update_freq
         threshold = (initial_rounds - marker) / update_frequency
+
         for cycle_idx in range(self.total_cycles):          
             cycle_wise_metrics = {"cycle_wise_train_metrics_local": {"num_samples": [], "num_correct": [], "losses": []}, "cycle_wise_test_metrics_local": {"num_samples": [], "num_correct": [], "losses": []}, 
                                   "cycle_wise_train_metrics_group": {"num_samples": [], "num_correct": [], "losses": []}, "cycle_wise_test_metrics_group": {"num_samples": [], "num_correct": [], "losses": []},
                                   "cycle_wise_test_metrics_global": {"num_samples": [], "num_correct": [], "losses": []}}
             logging.info("Starting Cycle %d", cycle_idx)
             wandb.log({"cycle": cycle_idx, "round": round_idx})
+
             for group_id, client_group in enumerate(self.cycle):
+                w_locals = []
+                w_global = self.model_trainer.get_model_params()
                 if (round_idx+1) >= threshold:
                     marker = threshold
                     threshold = marker + (initial_rounds-marker) / update_frequency
                     self.args.learning_rate = (self.args.learning_rate / decay_factor) if self.args.learning_rate > 0.00001 else self.args.learning_rate
+
                 wandb.log({"learning_rate": self.args.learning_rate, "round": round_idx})
+
                 logging.info("Communication Round %d in Cycle %d", round_idx, cycle_idx)
                 mlops.log_round_info(self.args.comm_round, round_idx)
 
                 # Train clients in the current group
                 w_locals = self._train_clients_for_group(client_group, w_global)
+                w_global = self._aggregate(w_locals)
+                self.model_trainer.set_model_params(w_global)
 
                 # Update global weights
                 mlops.event("agg", event_started=True, event_value=str(round_idx))
-                w_global = self._aggregate(w_locals)
-                self.model_trainer.set_model_params(w_global)
+                
+                # self.opt.zero_grad()
+                # opt_state = self.opt.state_dict()
+                # self._set_model_global_grads(w_avg)
+                # self._instanciate_opt()
+                # self.opt.load_state_dict(opt_state)
+                # self.opt.step()
+                
+                # w_global = self.model_trainer.get_model_params()
                 mlops.event("agg", event_started=False, event_value=str(round_idx))
+
                 if self.args.group_wise_models:
                     self.update_group_wise_model(w_global, group_id, cycle_idx)
                 # Test results
@@ -225,6 +245,9 @@ class FedAvgAPI(object):
                 round_wise_metrics_local = self._local_test_on_participating_clients(round_idx, True)
                 round_wise_metrics_global = self._test_global_model_on_global_data(w_global, round_idx, True)
                 cycle_wise_metrics = self.update_cycle_wise_metrics(round_wise_metrics_local, round_wise_metrics_group, round_wise_metrics_global, cycle_wise_metrics)
+
+                
+
                 round_idx += 1
             self.currently_part_in = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
             self._test_cycle_wise(cycle_wise_metrics, cycle_idx)
@@ -293,10 +316,10 @@ class FedAvgAPI(object):
     
     def _test_models_based_on_conditions(self, round_idx, w_global):
         if round_idx == self.args.comm_round - 1 or round_idx % self.args.frequency_of_the_test == 0:
-            self._local_test_on_participating_clients(round_idx)
+            self._local_test_on_participating_clients(round_idx, False)
             self._test_global_model_on_global_data(w_global, round_idx)
             if self.args.group_wise_models:
-                self._test_group_wise_model_on_local_data(round_idx)  
+                self._test_group_wise_model_on_local_data(round_idx, False)  
                   
     
 
@@ -317,7 +340,6 @@ class FedAvgAPI(object):
                     averaged_params[k] += local_model_params[k] * w
         return averaged_params
 
-    
 
     def update_group_wise_model(self, w_global, group_id, cycle_idx):            
         w_group = self.group_specific_models[group_id].state_dict()
@@ -325,8 +347,7 @@ class FedAvgAPI(object):
         if not cycle_idx:
             for key in w_global.keys():
                 updated_w_group[key] = w_global[key] 
-        else:
-            
+        else:            
             for key in w_global.keys():
                 updated_w_group[key] = (w_global[key] / (cycle_idx + 1)) + w_group[key] * (cycle_idx / (cycle_idx + 1))
         self.group_specific_models[group_id].load_state_dict(updated_w_group)
@@ -337,22 +358,15 @@ class FedAvgAPI(object):
         metrics_test = self.model_trainer.test(self.test_global, self.device, self.args)
         if return_val:
             return metrics_test
-        # metrics_train = self.model_trainer.test(self.train_global, self.device, self.args)
+
         test_acc = metrics_test["test_correct"] / metrics_test["test_total"]
         test_loss = metrics_test["test_loss"] / metrics_test["test_total"]
-        # train_acc = metrics_train["test_correct"] / metrics_train["test_total"]
-        # train_loss = metrics_train["test_loss"] / metrics_train["test_total"]
         stats = {"test_acc": test_acc, "test_loss":test_loss}
         logging.info(stats)
         if self.args.enable_wandb:
             wandb.log({"Global Test Acc": test_acc}, step=round_idx)
             wandb.log({"Global Test Loss": test_loss}, step=round_idx)
-            # wandb.log({"Global Train Acc": train_acc}, step=round_idx)
-            # wandb.log({"Global Train Loss": train_loss}, step=round_idx)
-            wandb.log({"Comm Round": round_idx}, step=round_idx)
 
-    
-        
     def _local_test_on_participating_clients(self, round_idx, return_val=False):
 
         logging.info("################local_test_on_participating_clients : {}".format(round_idx))
@@ -394,35 +408,51 @@ class FedAvgAPI(object):
         # Log metrics
         def log_metrics(prefix, acc, loss):
             if self.args.enable_wandb:
-                wandb.log({f"{prefix}/Acc": acc, "round": round_idx}, step=round_idx)
-                wandb.log({f"{prefix}/Loss": loss, "round": round_idx}, step=round_idx)
+                wandb.log({f"{prefix} Acc": acc}, step=round_idx)
+                wandb.log({f"{prefix} Loss": loss}, step=round_idx)
             mlops.log({f"{prefix}/Acc": acc, "round": round_idx})
             mlops.log({f"{prefix}/Loss": loss, "round": round_idx})
             logging.info({f"{prefix}_acc": acc, f"{prefix}_loss": loss})
 
+
         log_metrics("Train", train_acc, train_loss)
         log_metrics("Test", test_acc, test_loss)
 
-    def _test_group_wise_model_on_local_data(self, round_idx, return_val=False):
 
+
+    
+    
+    
+    def _test_group_wise_model_on_local_data(self, round_idx, return_val=False):
         train_metrics = {"num_samples": [], "num_correct": [], "losses": []}
         test_metrics = {"num_samples": [], "num_correct": [], "losses": []}
 
-        # Define a nested function to handle the metrics collection to avoid redundancy
         def collect_metrics(client, dataset_type):
             metrics = client.local_test(dataset_type)
             return metrics["test_total"], metrics["test_correct"], metrics["test_loss"]
 
-        
-
-        # Identify clients in the specific group
         clients_to_test = self.client_list
 
         for client in clients_to_test:
-        
+
             group_id = client.group_id
             group_models = [self.group_specific_models[i] for i in group_id]
-            client.model_trainer.set_model_params(random.choice(group_models).state_dict())
+
+            # Initialize the dictionary to store the averaged parameters
+            avg_params = {k: torch.zeros_like(v, dtype=torch.float) for k, v in group_models[0].state_dict().items()}
+
+            # Sum the parameters of each model
+            for model in group_models:
+                model_params = model.state_dict()
+                for k, v in model_params.items():
+                    avg_params[k] += v
+
+            # Divide each parameter by the number of models to get the average
+            for k in avg_params.keys():
+                avg_params[k] /= len(group_models)
+
+            # Set the averaged parameters to the client's model trainer
+            client.model_trainer.set_model_params(avg_params)
 
             train_samples, train_correct, train_loss = collect_metrics(client, False)
             test_samples, test_correct, test_loss = collect_metrics(client, True)
@@ -444,17 +474,13 @@ class FedAvgAPI(object):
         avg_test_loss = sum(test_metrics["losses"]) / len(test_metrics["losses"])
 
         wandb.log({
-            "Round": round_idx,
-            "Group": group_id,
             f"Average Group Train Accuracy": avg_train_acc,
             f"Average Group Test Accuracy": avg_test_acc,
             f"Average Group Train Loss": avg_train_loss,
             f"Average Group Test Loss": avg_test_loss
         }, step = round_idx)
-
-
-   
-        
+    
+    
     def update_cycle_wise_metrics(self, round_wise_metrics_local, round_wise_metrics_group, round_wise_metrics_global, cycle_wise_metrics):
         train_metrics_local, test_metrics_local = round_wise_metrics_local
         train_metrics_group, test_metrics_group = round_wise_metrics_group
@@ -473,9 +499,11 @@ class FedAvgAPI(object):
             cycle_wise_metrics["cycle_wise_test_metrics_global"][key1].append(test_metrics_global[key2])
 
         return cycle_wise_metrics
+
     
+  
     def _test_cycle_wise(self, cycle_wise_metrics, cycle_idx):
-        # Calculate and log the cycle-wise average metrics
+    # Calculate and log the cycle-wise average metrics
         for metric_type in ["train", "test"]:
             for model_type in ["local", "group", "global"]:
                 if metric_type == "train" and model_type == "global":
@@ -487,7 +515,7 @@ class FedAvgAPI(object):
 
                 avg_acc = num_correct / num_samples
                 avg_loss = total_loss / len(cycle_wise_metrics[prefix]["losses"])
-                
-                wandb.log({f"{model_type}_{metric_type}_Acc": avg_acc, "cycle": cycle_idx})
-                wandb.log({f"{model_type}_{metric_type}_Loss": avg_loss, "cycle": cycle_idx})
-        
+
+
+                wandb.log({f"{model_type} {metric_type} Acc": avg_acc})
+                wandb.log({f"{model_type} {metric_type} Loss": avg_loss})
