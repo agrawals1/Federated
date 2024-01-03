@@ -207,15 +207,38 @@ class ResNet(nn.Module):
         return x
 
 
-def resnet18(pretrained=False, **kwargs):
+def resnet18(pretrained=False, num_classes=100, group_norm=0, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
+        num_classes (int): Number of classes for CIFAR-100
+        group_norm (int): Number of groups for group normalization, 0 for batch norm
     """
-    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+    # Initialize the model with group normalization (if specified) and CIFAR-100 classes
+    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, group_norm=group_norm, **kwargs)
+
+    # Adjust the first convolutional layer for CIFAR-100's input size (32x32)
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+    model.bn1 = norm2d(64, group_norm)
+
+    # Load pretrained weights, if specified
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls["resnet18"]))
+        # Load the state dict from the model URL
+        state_dict = model_zoo.load_url(model_urls["resnet18"])
+
+        # Remove the weights for the first conv, first bn, and fc layers from the pretrained state dict
+        del state_dict["conv1.weight"]
+        del state_dict["bn1.weight"]
+        del state_dict["bn1.bias"]
+        del state_dict["fc.weight"]
+        del state_dict["fc.bias"]
+
+        # Load the modified state dict
+        model.load_state_dict(state_dict, strict=False)
+
     return model
+
+
 
 
 def resnet34(pretrained=False, **kwargs):

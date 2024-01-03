@@ -29,8 +29,8 @@ lr_update_freqs = [2]
 Remark = ""
 
 def run_federation_with_semaphore(semaphore, beta, overlap, gpu_id, round, lr, bs, decay, seed=6967677, group_norm=0, freq=4, decay_fact=4, strategy="client_sampling_cyclic_overlap_pattern", dataset="CIFAR10"):
-    epochs = 2 if round == 500 else (1 if round == 1000 else 4)
-    run_name = f"Dir:{beta}_Strategy:{strategy}_Overlap:{overlap}_Dataset:{dataset}_Remark:{Remark}"
+    epochs = 2 if round == 500 else (4 if round == 250 else 1)
+    run_name = f"Dir:{beta}_Overlap:{overlap}_Dataset:{dataset}_Remark:{Remark}"
     try:
         run_federation(beta, overlap, gpu_id, round, lr, bs, decay, seed, group_norm, freq, decay_fact, epochs, run_name, strategy, dataset)
     finally:
