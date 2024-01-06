@@ -26,7 +26,9 @@ _global_training_type = None
 _global_comm_backend = None
 
 __version__ = "0.8.8a108"
-
+current_dir = os.path.dirname(__file__)
+base_dir = os.path.join(current_dir, "../")  # Adjust based on the relative path
+wandb_dir = os.path.join(base_dir, "wandb")
 
 def init(args=None, check_env=True, should_init_logs=True):
     if args is None:
@@ -228,6 +230,19 @@ def manage_profiling_args(args):
 
             import wandb
 
+            if hasattr(args, "resume_wandb"):                
+                if args.resume_wandb == False:
+                    id = wandb.util.generate_id()
+                    os.makedirs(os.path.join(wandb_dir, args.run_name), exist_ok=True)
+                    with open(os.path.join(wandb_dir, args.run_name, "id.txt"), 'w') as f:
+                        f.write(id)
+                    wandb_args["id"] = id
+                    wandb_args["resume"] = "allow"
+                else:
+                    wandb_args["resume"] = args.resume_wandb
+                    with open(os.path.join(wandb_dir, args.run_name, "id.txt"), 'r') as f:
+                        wandb_args["id"] = f.read()
+                    
             wandb.init(**wandb_args)
 
             from .core.mlops.mlops_profiler_event import MLOpsProfilerEvent

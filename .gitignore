@@ -6,6 +6,6 @@ fedml_config_[0-9]*_[0-9]*.yaml
 fed_data/
 wandb/
 __pycache__/
-anaconda.sh
-.log
-latest-run/
+anaconda.sh 
+*.log
+wandb/latest-run
