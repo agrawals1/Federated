@@ -8,4 +8,5 @@ wandb/
 __pycache__/
 anaconda.sh 
 *.log
-wandb/latest-run
+wandb/latest-run/
+models/
