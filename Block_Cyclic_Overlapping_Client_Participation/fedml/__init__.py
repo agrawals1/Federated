@@ -107,7 +107,7 @@ def init(args=None, check_env=True, should_init_logs=True):
 
     update_client_id_list(args)
 
-    mlops.init(args, should_init_logs=should_init_logs)
+    # mlops.init(args, should_init_logs=should_init_logs)
 
     if hasattr(args, "rank") and hasattr(args, "worker_num"):
         if hasattr(args, "process_id") and args.process_id is not None:

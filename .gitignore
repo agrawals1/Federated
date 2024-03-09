@@ -3,10 +3,9 @@ fedml_config_[0-9]*_[0-9]*.yaml
 # But do not ignore fedml_config.yaml
 !fedml_config.yaml
 *.png
-fed_data/
-wandb/
-__pycache__/
+/fed_data/
+/wandb/
+/__pycache__/
 anaconda.sh 
 *.log
-wandb/latest-run/
-models/
+/models/

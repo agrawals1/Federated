@@ -1,7 +1,7 @@
 comm_args:
   backend: sp
 common_args:
-  active: 0
+  data_split: true
   alpha_active: 1.0
   alpha_dirichlet: 100.0
   dirichlet_seed: 993522575
@@ -37,13 +37,14 @@ tracking_args:
   run_name: test
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
-  wandb_project: Cyclic and Overlapping Clients in Federated Learning
+  wandb_project: Equal Group Number Variable Group Size
   resume_wandb: False        # either must or False
 train_args:
   batch_size: 32
   client_id_list: '[]'
   client_num_in_total: 100
-  client_num_per_round: 10
+  # client_num_per_round: 10
+  total_groups: 10
   client_optimizer: sgd
   server_optimizer: Adam
   comm_round: 500
