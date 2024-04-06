@@ -199,12 +199,22 @@ def dirichlet_distribution(labels: List[int], client_num: int, alpha: float, lea
 
 # 
 
-def process_combined_dataset(train_dataset, test_dataset):
+import numpy as np
+
+def process_dataset(train_dataset, test_dataset):
     """
     Combine and process training and testing datasets.
     """
-    all_x = [img.numpy().tolist() for img, _ in train_dataset] + [img.numpy().tolist() for img, _ in test_dataset]
-    all_y = [label for _, label in train_dataset] + [label for _, label in test_dataset]
+    # Assuming img is a tensor or an array and label is an integer
+    train_images = np.stack([img.numpy() for img, _ in train_dataset])
+    train_labels = np.array([label for _, label in train_dataset])
+    
+    test_images = np.stack([img.numpy() for img, _ in test_dataset])
+    test_labels = np.array([label for _, label in test_dataset])
+    
+    all_x = np.concatenate([train_images, test_images])
+    all_y = np.concatenate([train_labels, test_labels])
+    
     return all_x, all_y
 
 def load_dataset(dataset_name, transform):
@@ -360,7 +370,8 @@ def load_partition_data(args):
     test_data_local_dict = {client: batch_data(args, data, args.batch_size) for client, data in test_data.items()}
 
     # Global data
-    train_data_global = [batch for batches in train_data_local_dict.values() for batch in batches]
+    # train_data_global = [batch for batches in train_data_local_dict.values() for batch in batches]
+    train_data_global = None
     test_data_global = [batch for batches in test_data_local_dict.values() for batch in batches]
 
     # Data stats

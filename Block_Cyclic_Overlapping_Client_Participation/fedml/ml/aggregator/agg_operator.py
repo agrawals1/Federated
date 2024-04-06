@@ -9,7 +9,7 @@ class FedMLAggOperator:
     @staticmethod
     def agg(args, raw_grad_list: List[Tuple[float, OrderedDict]]) -> OrderedDict:
         training_num = 0
-        if args.federated_optimizer == "SCAFFOLD":
+        if args.federated_optimizer == "Scaffold":
             for i in range(len(raw_grad_list)):
                 local_sample_num, _, _ = raw_grad_list[i]
                 training_num += local_sample_num
@@ -97,8 +97,9 @@ def torch_aggregator(args, raw_grad_list, training_num):
         #     else:
         #         avg_local_grad += local_grad * w
         # avg_params = (avg_params, avg_local_grad)
-    elif args.federated_optimizer == "SCAFFOLD":
+    elif args.federated_optimizer == "Scaffold":
         (num0, total_weights_delta, total_c_delta_para) = raw_grad_list[0]
+        w_c = 1 / args.client_num_in_total
         # avg_params = total_weights_delta
         for k in total_weights_delta.keys():
             for i in range(0, len(raw_grad_list)):
@@ -112,9 +113,9 @@ def torch_aggregator(args, raw_grad_list, training_num):
                     total_weights_delta[k] += weights_delta[k] * w
                     total_c_delta_para[k] += c_delta_para[k]
             # w_c = 1 / args.client_num_in_total
-            w_c = 1 / args.client_num_in_total
-            total_weights_delta[k] = weights_delta[k]
-            total_c_delta_para[k] = c_delta_para[k] * w_c
+            
+            # total_weights_delta[k] = weights_delta[k]
+            total_c_delta_para[k] *= w_c
         avg_params = (total_weights_delta, total_c_delta_para)
         # logging.info(f"avg_params:{avg_params}. len(avg_params): {len(avg_params)}")
     elif args.federated_optimizer == "Mime":

@@ -5,12 +5,16 @@ import math
 import wandb
 from fedml import mlops
 from fedml.ml.trainer.trainer_creator import create_model_trainer
+from fedml.ml.trainer.scaffold_trainer import ScaffoldModelTrainer
+
 from .client import Client
 from collections import OrderedDict
 from ClientSampler import ClientSampler
 import copy
 from ..fedopt.optrepo import OptRepo
 import os
+import random
+from fedml.ml.aggregator.agg_operator import FedMLAggOperator
 current_dir = os.path.dirname(__file__)
 base_dir = os.path.join(current_dir, "../../../..")  # Adjust based on the relative path
 models_dir = os.path.join(base_dir, "models")
@@ -29,8 +33,6 @@ class FedAvgAPI(object):
             test_data_local_dict,
             class_num,
         ] = dataset
-
-        # self.train_global = train_data_global
         self.test_global = test_data_global
         self.val_global = None
         self.train_data_num_in_total = train_data_num
@@ -49,12 +51,24 @@ class FedAvgAPI(object):
         self.test_data_local_dict = test_data_local_dict
 
         logging.info("model = {}".format(model))
-        self.model_trainer = create_model_trainer(model,None,args)
+        if args.federated_optimizer == 'Scaffold':
+            self.model_trainer = ScaffoldModelTrainer(model, None, args)
+            self.c_model_global = copy.deepcopy(self.model_trainer.model).cpu()
+            for name, param in self.c_model_global.named_parameters():
+                param.data *= 0
+        else:
+            self.model_trainer = create_model_trainer(model,None,args)    
         self._instanciate_opt()
         self.model = model
         logging.info("self.model_trainer = {}".format(self.model_trainer))
         self.group_ids = {client_id: [] for client_id in range(self.args.client_num_in_total)}
-        self.cycle = self.generate_cycle(self.args.client_num_in_total, self.args.total_groups, self.args.overlap_num)
+        if self.args.overlap_type == 'Adjacent':
+            self.cycle = self.generate_cycle(self.args.client_num_in_total, self.args.total_groups, self.args.overlap_num)
+        elif self.args.overlap_type == 'MoreClients':
+            self.cycle = self.generate_cycle_more_clients_same_groups(self.args.client_num_in_total, self.args.total_groups, self.args.overlap_num)
+        else:
+            self.cycle = self.generate_cycle_more_groups_same_clients(self.args.client_num_in_total, self.args.total_groups, self.args.overlap_num)
+        self.group_sizes = [len(group) for group in self.cycle]
         if self.args.data_split:
             self.participation_counts = {client_id: 0 for client_id in range(self.args.client_num_in_total)}
             self.count_participations(self.cycle)
@@ -64,7 +78,7 @@ class FedAvgAPI(object):
         #     self.group_specific_models = {group_id: copy.deepcopy(model) for group_id in range(len(self.cycle))}
         
         self._setup_clients(
-            train_data_local_num_dict, train_data_local_dict, test_data_local_dict, copy.deepcopy(self.model_trainer),
+            train_data_local_num_dict, train_data_local_dict, test_data_local_dict, self.model_trainer
         )
     
     # def update_group_wise_model(self, w_global, group_id, cycle_idx):            
@@ -137,9 +151,8 @@ class FedAvgAPI(object):
         start_idx = 0
         
         base_grp_size = client_num_in_total // total_groups
-
-        for _ in range(total_groups):
-            self.group_size = base_grp_size + overlap_num
+        self.group_size = base_grp_size + overlap_num
+        for _ in range(total_groups):            
 
             end_idx = start_idx + self.group_size
 
@@ -154,7 +167,62 @@ class FedAvgAPI(object):
             start_idx += base_grp_size
 
         return cycle 
+    
+    def generate_cycle_more_clients_same_groups(self, client_num_in_total, total_groups, overlap_num):
+        if total_groups <= 0 or total_groups > client_num_in_total:
+            return []
 
+        base_group_size = client_num_in_total // total_groups
+        remaining_clients = client_num_in_total % total_groups
+        groups = []
+        start_idx = 0
+
+        for i in range(self.args.total_groups):
+            if i == total_groups - 1:
+                # Add remaining clients to the last group
+                end_idx = start_idx + base_group_size + remaining_clients
+            else:
+                end_idx = start_idx + base_group_size
+            
+            groups.append([i for i in range(start_idx, end_idx)])
+            start_idx = end_idx
+
+        # Select overlap clients randomly from the first group
+        if overlap_num > 0:
+            overlap_clients = random.sample(groups[0], overlap_num)
+            # Add overlap clients to all groups except the first
+            for i in range(1, total_groups):
+                groups[i].extend(overlap_clients)
+
+        return groups
+
+    def generate_cycle_more_groups_same_clients(self, client_num_in_total, total_groups, common_clients_num):
+        base_group_size = client_num_in_total // total_groups
+        clients = list(range(client_num_in_total))
+        reserve = []
+
+        # Create initial K groups with M/K clients each
+        groups = [clients[i * base_group_size:(i + 1) * base_group_size] for i in range(total_groups)]
+
+        # Select t common clients from the first group
+        common_clients = random.sample(groups[0], common_clients_num)
+
+        # Shift t clients from each group (except the first one) to the reserve and add t common clients
+        for i in range(1, total_groups):
+            shifted_clients = random.sample(groups[i], common_clients_num)
+            groups[i] = [client for client in groups[i] if client not in shifted_clients]
+            groups[i].extend(common_clients)
+            reserve.extend(shifted_clients)
+
+        # Create new groups with the reserve clients
+        while reserve:
+            new_group = reserve[:base_group_size - common_clients_num]
+            reserve = reserve[base_group_size - common_clients_num:]
+            new_group.extend(common_clients)
+            groups.append(new_group)
+
+        return groups
+    
     def _aggregate(self, w_locals):
         training_num = 0
         for idx in range(len(w_locals)):
@@ -171,6 +239,17 @@ class FedAvgAPI(object):
                 else:
                     averaged_params[k] += local_model_params[k] * w
         return averaged_params
+    
+    def _aggregate_Scaffold(self, w_locals):
+        # training_num = 0
+        # for idx in range(len(w_locals)):
+        #     (sample_num, averaged_params) = w_locals[idx]
+        #     training_num += sample_num
+
+        avg_params = FedMLAggOperator.agg(self.args, w_locals)
+        # logging.info(f"avg_params:{avg_params}. len(avg_params): {len(avg_params)}")
+        (total_weights_delta, total_c_delta_para) = avg_params
+        return total_weights_delta, total_c_delta_para
     
     
     def _setup_clients(
@@ -192,6 +271,7 @@ class FedAvgAPI(object):
         #         )
         #         self.client_list.append(c)
         # else:
+        self.group_size = max(self.group_sizes)
         for client_idx in range(self.group_size):
             c = Client(
                 client_idx,
@@ -200,7 +280,7 @@ class FedAvgAPI(object):
                 train_data_local_num_dict[client_idx],
                 self.args,
                 self.device,
-                model_trainer,
+                copy.deepcopy(model_trainer),
                 group_id = self.group_ids[client_idx]
             )
             self.client_list.append(c)
@@ -273,7 +353,6 @@ class FedAvgAPI(object):
         threshold = (initial_cycles - marker) / update_frequency
         for cycle_idx in range(self.total_cycles):          
             cycle_wise_metrics = {"cycle_wise_train_metrics_local": {"num_samples": [], "num_correct": [], "losses": []}, "cycle_wise_test_metrics_local": {"num_samples": [], "num_correct": [], "losses": []}, 
-                                  "cycle_wise_train_metrics_group": {"num_samples": [], "num_correct": [], "losses": []}, "cycle_wise_test_metrics_group": {"num_samples": [], "num_correct": [], "losses": []},
                                   "cycle_wise_test_metrics_global": {"num_samples": [], "num_correct": [], "losses": []}}
             logging.info("Starting Cycle %d", cycle_idx)
             wandb.log({"cycle": cycle_idx, "round": round_idx})
@@ -293,7 +372,7 @@ class FedAvgAPI(object):
                 # reset weight after standalone simulation
                 self.model_trainer.set_model_params(w_global)
                 # update global weights
-                w_avg = self._aggregate(w_locals)
+                w_avg = self._aggregate_Scaffold(w_locals)
                 # server optimizer
                 self.opt.zero_grad()
                 opt_state = self.opt.state_dict()
@@ -334,11 +413,21 @@ class FedAvgAPI(object):
             if self.args.data_split:
                 part_cnt = self.participation_counts[client_id]
                 current_part_num = self.currently_part_in[client_id]
-                w = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global)) 
+                if self.args.federated_optimizer == 'Scaffold':
+                    dw, dc = client.train_participation_normalised_Scaffold(part_cnt, current_part_num, self.c_model_global.state_dict(), copy.deepcopy(w_global))
+                    w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+                else:
+                    w = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global))
+                    w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+                
                 self.currently_part_in[client_id] += 1
             else:
-                w = client.train(copy.deepcopy(w_global))
-            w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+                if self.args.federated_optimizer == 'Scaffold':
+                    dw, dc = client.train_Scaffold(copy.deepcopy(w_global), self.c_model_global.state_dict())
+                    w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+                else:
+                    w = client.train(copy.deepcopy(w_global))
+                    w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
             
         return w_locals        
 
@@ -380,12 +469,12 @@ class FedAvgAPI(object):
     #         w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
     #     return w_locals
             
-    def _test_models_based_on_conditions(self, round_idx, w_global):
-        if round_idx == self.args.comm_round - 1 or round_idx % self.args.frequency_of_the_test == 0:
-            self._local_test_on_participating_clients(round_idx)
-            self._test_global_model_on_global_data(w_global, round_idx)
-            if self.args.group_wise_models:
-                self._test_group_wise_model_on_local_data(round_idx)                    
+    # def _test_models_based_on_conditions(self, round_idx, w_global):
+    #     if round_idx == self.args.comm_round - 1 or round_idx % self.args.frequency_of_the_test == 0:
+    #         self._local_test_on_participating_clients(round_idx)
+    #         self._test_global_model_on_global_data(w_global, round_idx)
+    #         if self.args.group_wise_models:
+    #             self._test_group_wise_model_on_local_data(round_idx)                    
     
     def _test_global_model_on_global_data(self, w_global, round_idx, return_val=False):
         logging.info("################test_global_model_on_global_dataset################")
@@ -401,11 +490,11 @@ class FedAvgAPI(object):
         stats = {"test_acc": test_acc, "test_loss":test_loss}
         logging.info(stats)
         if self.args.enable_wandb:
-            wandb.log({"Global Test Acc": test_acc}, step=round_idx)
-            wandb.log({"Global Test Loss": test_loss}, step=round_idx)
+            wandb.log({"Global Test Acc": test_acc, "round":round_idx})
+            wandb.log({"Global Test Loss": test_loss, "round":round_idx})
             # wandb.log({"Global Train Acc": train_acc}, step=round_idx)
             # wandb.log({"Global Train Loss": train_loss}, step=round_idx)
-            wandb.log({"Comm Round": round_idx}, step=round_idx)    
+            # wandb.log({"Comm Round": round_idx}, step=round_idx)    
         
     def _local_test_on_participating_clients(self, round_idx, group_size, return_val=False):
 
@@ -422,8 +511,8 @@ class FedAvgAPI(object):
         clients_to_test = self.client_list[:group_size]
 
         for idx, client in enumerate(clients_to_test):
-            if not self.args.active and self.test_data_local_dict[idx] is None:
-                continue
+            # if self.test_data_local_dict[idx] is None:
+            #     continue
 
             train_samples, train_correct, train_loss = collect_metrics(client, False)
             test_samples, test_correct, test_loss = collect_metrics(client, True)
@@ -448,14 +537,14 @@ class FedAvgAPI(object):
         # Log metrics
         def log_metrics(prefix, acc, loss):
             if self.args.enable_wandb:
-                wandb.log({f"{prefix}/Acc": acc, "round": round_idx}, step=round_idx)
-                wandb.log({f"{prefix}/Loss": loss, "round": round_idx}, step=round_idx)
+                wandb.log({f"{prefix}/Acc": acc, "round": round_idx})
+                wandb.log({f"{prefix}/Loss": loss, "round": round_idx})
             mlops.log({f"{prefix}/Acc": acc, "round": round_idx})
             mlops.log({f"{prefix}/Loss": loss, "round": round_idx})
             logging.info({f"{prefix}_acc": acc, f"{prefix}_loss": loss})
 
-        log_metrics("Train", train_acc, train_loss)
-        log_metrics("Test", test_acc, test_loss)
+        log_metrics("Local_Train", train_acc, train_loss)
+        log_metrics("Local_Test", test_acc, test_loss)
 
     # def _test_group_wise_model_on_local_data(self, group_size, round_idx, return_val=False):
     #     train_metrics = {"num_samples": [], "num_correct": [], "losses": []}
@@ -517,7 +606,7 @@ class FedAvgAPI(object):
     def _test_cycle_wise(self, cycle_wise_metrics, cycle_idx):
         # Calculate and log the cycle-wise average metrics
         for metric_type in ["train", "test"]:
-            for model_type in ["local", "group", "global"]:
+            for model_type in ["local", "global"]:
                 if metric_type == "train" and model_type == "global":
                     continue
                 prefix = f"cycle_wise_{metric_type}_metrics_{model_type}"

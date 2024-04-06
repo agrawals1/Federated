@@ -10,8 +10,8 @@ import wandb
 from wandb import util
 from wandb.vendor.pynvml import pynvml
 
-from wandb.sdk.internal import ipu
-from wandb.sdk.internal import tpu
+# from wandb.sdk.internal import ipu
+# from wandb.sdk.internal import tpu
 from wandb.sdk.internal.settings_static import SettingsStatic
 from wandb.sdk.interface.interface_queue import InterfaceQueue
 from wandb.sdk.lib import telemetry
@@ -90,19 +90,19 @@ class WandbSystemStats:
         self._thread = None
         self._tpu_profiler = None
 
-        if tpu.is_tpu_available():
-            try:
-                self._tpu_profiler = tpu.get_profiler()
-            except Exception as e:
-                wandb.termlog("Error initializing TPUProfiler: " + str(e))
+        # if tpu.is_tpu_available():
+        #     try:
+        #         self._tpu_profiler = tpu.get_profiler()
+        #     except Exception as e:
+        #         wandb.termlog("Error initializing TPUProfiler: " + str(e))
 
         self._ipu_profiler = None
 
-        if ipu.is_ipu_available():
-            try:
-                self._ipu_profiler = ipu.IPUProfiler(self._pid)
-            except Exception as e:
-                wandb.termlog("Error initializing IPUProfiler: " + str(e))
+        # if ipu.is_ipu_available():
+        #     try:
+        #         self._ipu_profiler = ipu.IPUProfiler(self._pid)
+        #     except Exception as e:
+        #         wandb.termlog("Error initializing IPUProfiler: " + str(e))
 
     def start(self) -> None:
         if self._thread is None:
