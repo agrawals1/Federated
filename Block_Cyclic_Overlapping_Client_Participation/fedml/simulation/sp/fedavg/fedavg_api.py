@@ -1,7 +1,6 @@
 import copy
 import logging
-import random
-
+import torch
 import math
 import wandb
 import random
@@ -316,12 +315,8 @@ class FedAvgAPI(object):
             self._local_test_on_participating_clients(round_idx, False)
             self._test_global_model_on_global_data(w_global, round_idx)
             if self.args.group_wise_models:
-<<<<<<< HEAD
                 self._test_group_wise_model_on_local_data(round_idx, False)  
                   
-=======
-                self._test_group_wise_model_on_local_data(round_idx)                    
->>>>>>> 568838e (Distributing test data non-iidliy, remaining: implementation of fedopt, aggregate group wise models rather than random selection, and warm startfor group wise and local models..)
     
 
     def _aggregate(self, w_locals):
@@ -367,14 +362,6 @@ class FedAvgAPI(object):
         if self.args.enable_wandb:
             wandb.log({"Global Test Acc": test_acc}, step=round_idx)
             wandb.log({"Global Test Loss": test_loss}, step=round_idx)
-<<<<<<< HEAD
-
-=======
-            # wandb.log({"Global Train Acc": train_acc}, step=round_idx)
-            # wandb.log({"Global Train Loss": train_loss}, step=round_idx)
-            wandb.log({"Comm Round": round_idx}, step=round_idx)    
-        
->>>>>>> 568838e (Distributing test data non-iidliy, remaining: implementation of fedopt, aggregate group wise models rather than random selection, and warm startfor group wise and local models..)
     def _local_test_on_participating_clients(self, round_idx, return_val=False):
 
         logging.info("################local_test_on_participating_clients : {}".format(round_idx))
@@ -438,11 +425,6 @@ class FedAvgAPI(object):
         def collect_metrics(client, dataset_type):
             metrics = client.local_test(dataset_type)
             return metrics["test_total"], metrics["test_correct"], metrics["test_loss"]
-<<<<<<< HEAD
-
-=======
-        # Identify clients in the specific group
->>>>>>> 568838e (Distributing test data non-iidliy, remaining: implementation of fedopt, aggregate group wise models rather than random selection, and warm startfor group wise and local models..)
         clients_to_test = self.client_list
 
         for client in clients_to_test:
@@ -491,13 +473,8 @@ class FedAvgAPI(object):
             f"Average Group Train Loss": avg_train_loss,
             f"Average Group Test Loss": avg_test_loss
         }, step = round_idx)
-<<<<<<< HEAD
     
     
-=======
-   
-        
->>>>>>> 568838e (Distributing test data non-iidliy, remaining: implementation of fedopt, aggregate group wise models rather than random selection, and warm startfor group wise and local models..)
     def update_cycle_wise_metrics(self, round_wise_metrics_local, round_wise_metrics_group, round_wise_metrics_global, cycle_wise_metrics):
         train_metrics_local, test_metrics_local = round_wise_metrics_local
         train_metrics_group, test_metrics_group = round_wise_metrics_group
@@ -518,11 +495,7 @@ class FedAvgAPI(object):
         return cycle_wise_metrics
 
     
-<<<<<<< HEAD
   
-=======
-    
->>>>>>> 568838e (Distributing test data non-iidliy, remaining: implementation of fedopt, aggregate group wise models rather than random selection, and warm startfor group wise and local models..)
     def _test_cycle_wise(self, cycle_wise_metrics, cycle_idx):
     # Calculate and log the cycle-wise average metrics
         for metric_type in ["train", "test"]:
