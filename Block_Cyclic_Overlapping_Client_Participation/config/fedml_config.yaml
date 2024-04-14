@@ -33,7 +33,7 @@ model_args:
 tracking_args:
   enable_tracking: False
   enable_wandb: True
-  run_name: Correcting_Broken_Code_1
+  run_name: Correcting_Broken_Code_2.5
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_project: Test
