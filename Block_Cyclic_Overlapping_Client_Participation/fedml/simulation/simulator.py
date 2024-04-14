@@ -37,7 +37,7 @@ class SimulatorSingleProcess:
         from .sp.hierarchical_fl.trainer import HierarchicalTrainer
         from .sp.turboaggregate.TA_trainer import TurboAggregateTrainer
 
-        if args.federated_optimizer == FedML_FEDERATED_OPTIMIZER_FEDAVG:
+        if args.federated_optimizer == FedML_FEDERATED_OPTIMIZER_FEDAVG or args.federated_optimizer == 'Scaffold':
             self.fl_trainer = FedAvgAPI(args, device, dataset, model)
         elif args.federated_optimizer == FedML_FEDERATED_OPTIMIZER_FEDOPT:
             self.fl_trainer = FedOptAPI(args, device, dataset, model)

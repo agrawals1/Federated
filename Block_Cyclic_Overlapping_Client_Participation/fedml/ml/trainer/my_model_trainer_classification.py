@@ -15,14 +15,14 @@ class ModelTrainerCLS(ClientTrainer):
     def get_model_params(self):
         return self.model.cpu().state_dict()
     
-    def get_last_aggregated_model_params(self):
-        return self.last_aggregated_model.cpu().state_dict()
+    # def get_last_aggregated_model_params(self):
+    #     return self.last_aggregated_model.cpu().state_dict()
 
     def set_model_params(self, model_parameters):
         self.model.load_state_dict(model_parameters)
 
-    def set_last_aggregated_model_params(self, model_parameters):
-        self.last_aggregated_model.load_state_dict(model_parameters)
+    # def set_last_aggregated_model_params(self, model_parameters):
+    #     self.last_aggregated_model.load_state_dict(model_parameters)
     
 
     def train(self, train_data, device, args):
@@ -128,15 +128,15 @@ class ModelTrainerCLS(ClientTrainer):
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
                 optimizer.step()
-                logging.info(
-                    "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                        epoch,
-                        (batch_idx + 1) * args.batch_size,
-                        len(train_data) * args.batch_size,
-                        100.0 * (batch_idx + 1) / len(train_data),
-                        loss.item(),
-                    )
-                )
+                # logging.info(
+                #     "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                #         epoch,
+                #         (batch_idx + 1) * args.batch_size,
+                #         len(train_data) * args.batch_size,
+                #         100.0 * (batch_idx + 1) / len(train_data),
+                #         loss.item(),
+                #     )
+                # )
                 batch_loss.append(loss.item())
                 current_steps += 1
                 if current_steps == args.local_iterations:

@@ -25,10 +25,10 @@ def create(args, output_dim):
         model = LogisticRegression(28 * 28, output_dim)
     elif model_name == "RESNET_18" and args.dataset == "CIFAR10":
         logging.info("RESNET_18 + CIFAR10")
-        model = resnet18(num_classes = 10, group_norm=args.group_norm_size, pretrained = False)
+        model = resnet18(num_classes = 10, group_norm=args.group_norm_size, pretrained = True)
     elif model_name == "RESNET_18" and args.dataset == "CIFAR100":
         logging.info("RESNET_18 + CIFAR100")
-        model = resnet18(num_classes = 100, group_norm=args.group_norm_size, pretrained = False)
+        model = resnet18(num_classes = 100, group_norm=args.group_norm_size, pretrained = True)
     elif model_name == "lr" and args.dataset == "CIFAR10":
         logging.info("LogisticRegression + CIFAR10")
         model = LogisticRegression_Cifar10(32 * 32 * 3, output_dim)

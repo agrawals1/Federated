@@ -1,0 +1,588 @@
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[misc]{ifsym}
+\newcommand{\corr}{(\Letter)}
+\newtheorem{assumption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+% N.B.: do not change anything above this line. If you require additional packages, please load them directly after this line.
+\usepackage{mwe}
+\begin{document}
+
+\title{Participation Strategies in Federated Learning with Heterogeneous Client Communications}
+
+\titlerunning{Participation Strategies in Federated Learning with Heterogeneous Client Communications}
+% If the full title of your paper is short enough to also fit in the running head, you can omit the abbreviated paper title here. You can check as follows: if you comment out the \titlerunning line, something will appear in the header of all odd-numbered pages of your PDF from page 3 onward. This something is either the full title (in which case all is well), or the error message "Title Suppressed Due to Excessive Length". If this error message appears, you're going to want to provide an abbreviated title within the \titlerunning command, because if you won't do it, Springer will do it for you.
+
+%N.B.: Author information (both in the \author{} and \authorrunning{} command) should only be present in the Camera-Ready Version of your paper. The version that you initially submit for review, ought to be double-blind. So, when initially submitting your paper, use:
+\author{Author information scrubbed for double-blind reviewing}
+%\author{Andr\'e Lauren Benjamin\inst{1} \and
+%Calvin Cordozar Broadus Jr.\inst{2,3} \corr \and
+%Antwan Andr\'e Patton\inst{1}\orcidID{0000-1111-2222-3333}}
+% You may leave out the orcidID information, if you want to.
+% Use \corr to indicate the corresponding author. Note the spacing around the \corr command. Only one author can be the corresponding author.
+
+%N.B.: comment out the \authorrunning{} command for the double-blind version of your paper submitted for review. Later, if your paper is accepted, use the command for the Camera-Ready Version.
+%\authorrunning{A.L. Benjamin et al.}
+% First names are abbreviated in the running head.
+% If there is one author, write 'A.L. Benjamin'.
+% If there are two authors, write 'A.L. Benjamin and C.C. Broadus Jr.'
+% If there are more than two authors, '[...] et al.' is used.
+
+%\institute{Fictional Southern University, Savannah GA 31404, USA \email{\{a.l.benjamin,a.a.patton\}@fsu.fake}
+%\and
+%Fictional West Coast University, Long Beach CA 90840, USA \email{ccb@fwcu.fake}
+%\and
+%Secondary European Affiliation, Tiergartenstr. 17, 69121 Heidelberg, Germany
+%\email{lncs@springer.com}}
+
+\maketitle              % typeset the header of the contribution
+
+\begin{abstract}
+In cross-device federated learning (FL), a machine learning model is trained to exploit communication between a server and a large number of edge device clients. In practice, the capability of edge devices to reliably communicate updates can be highly heterogeneous. As a consequence, the frequency at which certain devices can communicate may be higher than that of others. In this paper, we investigate strategies for forming groups of active clients to improve the accuracy of the server model. In particular, we consider the scenario where groups are structured and activated in a cyclic fashion. An open question that we address is whether it is desirable to exploit heterogeneity in communication capabilities by allowing for certain clients to participate in multiple groups. Our theoretical convergence analysis and experiments demonstrate that allowing clients to participate in multiple groups and exploiting local data partitioning leads to substantial accuracy gains. The proposed strategies hold promise for enhancing the effectiveness of cross-device FL in heterogeneous communication environments.
+
+\keywords{Heterogeneous Communications, Partial Participation}
+\end{abstract}
+
+\section{Introduction}
+%\subsection{Main Contributions}
+
+A key application scenario for federated learning (FL) is to collaboratively train a machine learning model based on communication with a large number of edge devices (e.g., mobile phones, tablets, wireless sensing devices). In this scenario, often known as cross-device FL, clients are not required to communicate their entire data set. This approach can significantly reduce communication overheads, including resource consumption. 
+
+Client devices are often connected to the server via wireless links. As a consequence, the quality of communications is highly heterogeneous. This is both due to the heterogeneity of the devices themselves, and their location. For example, a client device close to the server is able to transmit data reliably to the server with lower power consumption. 
+
+Communication between large numbers of client devices and the server is an example of massive multiple access. As a consequence, the transmissions of devices active at the same time interfere with each other. As such, it is often desirable to schedule transmissions so that the number of successful transmissions is maximized. This means that clients are associated with a group, and each group is active in a cyclic fashion. 
+
+Recently, cyclic partial participation patterns have been investigated [XX]. In these works, each client is associated with a single group. In other words, in each cycle, each client participated in a single communication round. 
+
+As client devices may be highly heterogeneous, a subset of the clients may be capable of communicating within multiple groups. In this case, the standard assumption of each client being associated with a single group is violated, and nothing is known about the performance of federated learning, such as FedAve. 
+
+In this paper, we study FedAve with cyclic participation where clients may be active in multiple groups. There are two key questions:
+\begin{enumerate}
+	\item[(Q1)] When clients are active in multiple groups, should they compute updates based on their entire data set?
+	\item[(Q2)] Given a strategy for splitting data, how many groups should clients be associated with? 
+\end{enumerate}
+
+We address (Q1) via an experimental study, which shows that training on the full data set in each communication round degrades performance relative to the scenario where each client is only associated with a single group. This suggests that when clients are active in multiple groups, they should only train on a subset of their data.
+
+To address (Q2), we analyze the covergence rate of FedAve where when a client is active in multiple groups, in each group updates are computed based on a disjoint subset of the local data set. Our analysis shows an explicit dependence on the size of the data set utilized in each communication round, and provides insight into how clients should be allocated to multiple groups. In particular, we observe the dependence on XX. 
+
+We validate our analysis via further experiments which clearly demonstrate the potential gains in allocating clients to multiple groups with data splitting. XX
+
+\section{Related Work}
+
+%\begin{table}[t]
+%\caption{Table captions should be placed above the
+%tables.}\label{tab1}
+%\begin{tabular}{lll}
+%\toprule
+%Heading level &  Example & Font size and style\\
+%\midrule
+%Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
+%1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
+%2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
+%3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
+%4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
+%\bottomrule
+%\end{tabular}
+%\end{table}
+
+\section{Problem Formulation}
+\begin{algorithm}[!t]  % Request to place the algorithm at the top of the page
+\caption{Local GD in CyCP with overlapping client groups.}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Global Model $w^{(1,0)}$, client groups $\sigma(k), k \in [K]$
+\STATE \textbf{Output:} Global Model $w^{(I+1,0)}$
+\FOR{$i \in [I]$ cycle-epochs}
+    \FOR{$k \in [K]$}
+        \STATE Initialise clients of the group with a subset of data $\mathcal{B}_{m,k} \subseteq \mathcal{B}_{m}$
+        \STATE Send global model $w^{(i,k-1)}$ to clients in $\sigma(k)$
+        \FOR{each client $m \in \sigma(k)$ in parallel}
+            \STATE $w_{m,k}^{(i+1,0)} \leftarrow \text{LocalUpdate}(m, w^{(i,k-1)})$
+            \IF{$k == |K|$}
+                \STATE $w^{(i+1,0)} = \frac{1}{\mathcal{G}} \sum_{m \in \sigma(k)} w_{m,k}^{(i+1,0)}$
+            \ELSE
+                \STATE $w^{(i,k)} = \frac{1}{\mathcal{G}} \sum_{m \in \sigma(k)} w_{m,k}^{(i+1,0)}$
+            \ENDIF
+        \ENDFOR
+    \ENDFOR
+\ENDFOR
+\item[] \textbf{Function} \textsc{LocalUpdate}$(m, w)$ \\
+\hskip\algorithmicindent $w \leftarrow w - \eta \nabla F_{m,k}(w)$ 
+\end{algorithmic}
+\end{algorithm}
+Consider a federated learning system with $M$ clients. Each client $m \in [M]$ has access to a local dataset $\mathcal{B}_m \subset \Xi$, and is associated with the local empirical risk 
+\begin{align}
+	F_m(\mathbf{w}) = \frac{1}{|\mathcal{B}_m|} \sum_{\xi \in \mathcal{B}_m} \ell(\mathbf{w},\xi),~\mathbf{w} \in \mathbb{R}^d,
+\end{align}
+where $\ell(\mathbf{w},\xi)$ is the local loss function for the model $\mathbf{w} \in \mathbb{R}^d$ and data sample $\xi$. We assume that each client has a common loss function. The optimization task for the system is then given by 
+\begin{align}
+	\min_{\mathbf{w} \in \mathbb{R}^d} F(\mathbf{w}) := \frac{1}{M} \sum_{m=1}^M F_m(\mathbf{w}).
+\end{align}
+
+Optimization proceeds by distinct communication round, with each round corresponding to a different set of active clients. We first consider the scenario where clients are associated with one or more groups $\sigma(1),\ldots,\sigma(K)$. The groups are activated in a cyclic fashion: in communication round $r = 1,2,\ldots$, group $\sigma(1+(r-1)\mod K)$ is active. 
+
+Client $m \in [M]$ may be associated with one or more groups. In the case client $m$ is associated with more than one group, only a portion of its data set is accessible in each communication round. In particular, when client $m$ is active in group $\sigma(k),~k \in \{j: m \in \sigma(j)\}$, it has access to the data set $\mathcal{B}_{m,k} \subset \mathcal{B}_m$ satisfying 
+\begin{align}
+	&\bigcup_{j: m \in \sigma(j)} \mathcal{B}_{m,j} = \mathcal{B}_m,\notag\\
+	&\mathcal{B}_{m,k} \cap \mathcal{B}_{m,k'} = \emptyset,~k \neq k',~k,k' \in \{j: m \in \sigma(j)\}.
+\end{align} 
+We denote the local risk of client $m$ in group $k \in \{j: m \in \sigma(j)\}$ by 
+\begin{align}
+	F_{m,k}(\mathbf{w}) = \frac{1}{|\mathcal{B}_{m,k}|} \sum_{\xi \in \mathcal{B}_{m,k}} \ell(\mathbf{w},\xi),~\mathbf{w} \in \mathbb{R}^d.
+\end{align}
+As a consequence, we have 
+\begin{align}
+	F(\mathbf{w}) = \frac{1}{M} \sum_{k = 1}^K \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} F_{m,k}(\mathbf{w}).
+\end{align}
+
+Let $n = 1 + (r - 1)\mod K$ and $r = (i-1)K + n$, where $i$ denotes the cycle. Communication round $i$ then consists of the following steps:
+\begin{enumerate}
+	\item[(i)] Client local update: client $m \in \sigma(n)$ receives the current global iterate from the server $\mathbf{w}^{(i,n-1)}$, where $\mathbf{w}^{(i,0)} = \mathbf{w}^{(i-1,K)}$. The local iterate is then updated via 
+	\begin{align}
+		\mathbf{w}_m^{(i,n)} = \mathbf{w}^{(i,n-1)} - \eta \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\nabla F_{m,n}(\mathbf{w}^{(i,n-1)}).
+	\end{align}
+	\item[(ii)] Server update: the server receives local iterates from each client in group $\sigma(n)$ and computes the updated global iterate
+	\begin{align}\label{eq:update_rule}
+		\mathbf{w}^{(i,n)} = \frac{1}{|\sigma(n)|} \sum_{m \in \sigma(n)} \mathbf{w}_m^{(i,n)}.
+	\end{align}
+\end{enumerate}
+
+\begin{remark}
+	As the sequence of active client groups is deterministic and updates are computed using the gradients $\nabla F_{m,k}$ (i.e., no random selection of data), there is no randomness in the algorithm.
+\end{remark}
+
+\section{Convergence Analysis}
+
+\subsection{Assumptions}
+
+\begin{assumption}\label{assump:L_smooth}
+	The local objective functions $F_{m,k},~k \in \{j: m \in \sigma(j)\}$ are $L$-smooth. Moreover, there exists a constant $C > 0$ such that 
+	\begin{align}
+		\|\nabla \ell(\mathbf{w},\xi)\| \leq C,~~~\mathbf{w} \in \mathbb{R}^d,~\xi \in \mathcal{B}_m,~m = 1,\ldots,M.
+	\end{align}
+\end{assumption}
+
+\begin{assumption}
+	For some $\mu > 0$, the global objective $F$ satisfies 
+	\begin{align}
+		\frac{1}{2}\|\nabla F(\mathbf{w})\|^2 \geq \mu (F(\mathbf{w}) - \min_{\mathbf{w}'\in \mathbb{R}^d} F(\mathbf{w}')),~\forall \mathbf{w} \in \mathbb{R}^d. 
+	\end{align}
+\end{assumption}
+
+\begin{assumption}\label{assump:heterogeneity}
+	There exists a constant $\alpha \geq 0$ such that 
+	\begin{align}
+		\left\|\frac{1}{|\sigma(k)|}\sum_{m \in \sigma(k)} \nabla F_{m}(\mathbf{w}) - \nabla F(\mathbf{w})\right\| \leq \alpha,~\forall \mathbf{w} \in \mathbb{R}^d,~k = 1,\ldots,K.
+	\end{align}
+\end{assumption}
+
+\begin{remark}
+	Note that 
+	\begin{align}
+		\nabla F(\mathbf{w}) = \frac{1}{M} \sum_{m=1}^M \frac{1}{|\mathcal{B}_m|} \sum_{\xi \in \mathcal{B}_m} \nabla \ell(\mathbf{w},\xi).
+	\end{align}
+	This implies that the difference in the average losses cannot exceed $2C$. We therefore expect $\alpha$ to be smaller than or of the same order of magnitude as $C$. 
+\end{remark}
+
+\subsection{Main Result}
+
+\begin{theorem}
+	XX
+\end{theorem}
+
+\subsection{Selecting Group Structures}
+
+Recall that
+\begin{align}
+	&\|\mathbf{r}^{(i,0)}\| \leq \sum_{k=1}^K \sum_{j=1}^{k-1} \left(L\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\right)\left(\prod_{j' = j+1}^{k-1} \left(1 + \eta L \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|}\right)\right)\notag\\
+	&~~~\cdot\left(C\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right) + |\sigma(j)|\alpha + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|\right).
+\end{align}
+We set 
+\begin{align}
+	U_1 &= \sum_{k=1}^K \sum_{j=1}^{k-1} \left(L\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\right)\left(\prod_{j' = j+1}^{k-1} \left(1 + \eta L \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|}\right)\right)\notag\\
+	&~~~\cdot\left(C\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right) + |\sigma(j)|\alpha\right).
+\end{align}
+
+\textit{Scenario 1:} $K$ groups, $M/K$ clients per group, no overlaps.
+\begin{align}
+	U_1^{(1)} &= \sum_{k=1}^{\tilde{K}} \sum_{j = 1}^{k-1} \frac{ML}{K} \left(\prod_{j'= j+1}^{K} \left(1 + \eta \frac{LM}{K}\right)\right)\frac{M\alpha}{K}
+\end{align}
+
+\textit{Scenario 2:} $K$ groups, $M/K + 1$ clients per group (except the first group). A single client is in every group. 
+\begin{align}
+	U_1^{(2)} &= \sum_{k=1}^K \sum_{j = 1}^{k-1}L\left(\frac{M}{K} + \frac{1}{K}\right)\left(\prod_{j'= j+1}^{K} \left(1 + \eta L\frac{M+1}{K}\right)\right)\left(C\left(1 - \frac{1}{K}\right) + \alpha\left(\frac{M}{K} + \frac{1}{K}\right)\right).
+\end{align}
+This suggests that adding clients to the groups with copies is not a good idea. 
+
+\textit{Scenario 3:} $K+1$ groups, $M/K$ clients per group. We first form $K$ groups with $M/K$ distinct clients. In group $k$ we place a copy of a client from group $k-1$. The client that is removed is then placed in a new ``last'' group. As such, there are $K+1$ groups in total and all groups, except the last group, contains one copy of a client. The last group consists of $M/K$ clients that are not copied.
+\begin{align}
+	U_1^{(3)} &\leq \sum_{j=1}^{K} \frac{LM}{K}\left(\prod_{j'= j+1}^{K} \left(1 + \eta L\left(\frac{M}{K} - \frac{1}{2}\right)\right)\right)\left(\frac{C}{2} + \frac{M}{K}\alpha\right)\notag\\
+	&~~~ + \sum_{k=1}^K \sum_{j=1}^{k-1} \frac{LM}{2K} \left(\prod_{j' = j+1}^{k-1} \left(1 + \eta\left(\frac{M}{K} - \frac{1}{2}\right)\right)\right)\left(\frac{C}{2} + \frac{M}{K}\alpha\right)
+\end{align}
+
+\textit{Scenario 4:} $K+1$ groups, $M/K$ clients per group. We first form $K$ groups with $M/K$ distinct clients. In group $k$ we copy a client from group $1$ (common for all $k$) and shift one of the clients from group $k$ to group $K+1$. This yields $M/K - 1$ clients in group $K+1$. We then add another copy of the client in group $1$ to group $K+1$. This means that every group has one copy of a common client and $M/K-1$ clients that are not copied. 
+\begin{align}
+	U_1^{(4)} &= \sum_{k=1}^{K+1} \sum_{j = 1}^{k-1} L\left(\frac{M}{K} - 1 + \frac{1}{K+1}\right)\left(\prod_{j'= j+1}^{k-1} \left(1 + \eta L\left(\frac{M}{K} - 1 + \frac{1}{K+1}\right)\right)\right)\notag\\
+	&~~~ \cdot\left(C\left(1 - \frac{1}{K+1}\right) + \frac{M}{K}\alpha\right)\notag\\
+\end{align}
+
+\begin{remark}
+	Note that in Scenarios 3 and 4 there is the possibility that we have a gain over Scenario 1. Numerical experiments suggest that this arises when $K$ is large. 
+\end{remark}
+
+[XX add a figure to compare the different scenarios]
+
+\section{Experimental Results}
+\begin{figure}[!htbp]
+\centering
+\begin{tabular}{cc}
+
+% Adjust the width to 0.49\textwidth to slightly increase the size
+\includegraphics[width=0.49\textwidth]{images/Dir0.1SplitVsNoSplit.png} &
+\includegraphics[width=0.49\textwidth]{images/Dir0.5SplitVsNoSplit.png} \\
+(a) Description of first image & (b) Description of second image \\[6pt]
+
+\includegraphics[width=0.49\textwidth]{images/Dir1.0SplitVsNoSplit.png} &
+\includegraphics[width=0.49\textwidth]{images/Dir100.0SplitVsNoSplit.png} \\
+(c) Description of third image & (d) Description of fourth image \\
+
+\end{tabular}
+\caption{Your caption here describing the figures}
+\label{fig:impact-data-splitting}
+\end{figure}
+\subsection{Impact of Data Splitting}
+Organizational structure means the pattern of relationships within
+the group. It may include hierarchy (who’s in charge) and roles and
+responsibilities (who does what), but it also incorporates people’s
+attitudes and perceptions, the quality of what is produced, the
+way decisions are made, and hundreds of other factors. The most
+effective structures are built out of conscious choices. They frame
+how we do business.
+Few citizen groups spend time on this subject at first. They’re
+too busy working on their project and getting things organized. But
+sooner or later, the initial excitement wears off, and the bothersome
+little details take on immense importance.
+If your group is just starting, use this publication and EC 1506,
+Creating Successful Partnerships, to help you form its basic
+framework. If your group has been in existence for quite awhile, it’s
+not too late to step back and reassess your structure and mission.
+Being clear about your mission also is important. Many groups
+have trouble identifying their mission. And if two of you from the
+same group don’t say the same thing, the problem is even worse.
+\subsection{Selecting Group Structures}
+Organizational structure means the pattern of relationships within
+the group. It may include hierarchy (who’s in charge) and roles and
+responsibilities (who does what), but it also incorporates people’s
+attitudes and perceptions, the quality of what is produced, the
+way decisions are made, and hundreds of other factors. The most
+effective structures are built out of conscious choices. They frame
+how we do business.
+Few citizen groups spend time on this subject at first. They’re
+too busy working on their project and getting things organized. But
+sooner or later, the initial excitement wears off, and the bothersome
+little details take on immense importance.
+If your group is just starting, use this publication and EC 1506,
+Creating Successful Partnerships, to help you form its basic
+framework. If your group has been in existence for quite awhile, it’s
+not too late to step back and reassess your structure and mission.
+Being clear about your mission also is important. Many groups
+have trouble identifying their mission. And if two of you from the
+same group don’t say the same thing, the problem is even worse.
+\begin{figure}[!t]
+\centering
+\begin{tabular}{cc}
+
+% Adjust the width to 0.49\textwidth to slightly increase the size
+\includegraphics[width=0.49\textwidth]{images/Dir0.1MoreClientsVsMoreGroups.png} &
+\includegraphics[width=0.49\textwidth]{images/Dir0.5MoreClientsVsMoreGroups.png} \\
+(a) Description of first image & (b) Description of second image \\[6pt]
+
+\includegraphics[width=0.49\textwidth]{images/Dir1.0MoreClientsVsMoreGroups.png} &
+\includegraphics[width=0.49\textwidth]{images/Dir100.0MoreClientsVsMoreGroups.png} \\
+(c) Description of third image & (d) Description of fourth image \\
+
+\end{tabular}
+\caption{Your caption here describing the figures}
+\label{fig:group-structures}
+\end{figure}
+
+
+\section{Conclusions}
+
+\appendix
+
+\section{Proofs}
+
+\subsection{Preliminary Lemmas}
+
+\begin{lemma}[Young's Inequality]\label{lem:young}
+	Let $\mathbf{u},\mathbf{v} \in \mathbb{R}^d$ and $\kappa > 0$. Then, 
+	\begin{align}
+		\langle \mathbf{u},\mathbf{v}\rangle \leq \frac{\|\mathbf{u}\|^2}{2\kappa} + \frac{\kappa\|\mathbf{v}\|^2}{2},
+	\end{align}
+\end{lemma}
+
+\begin{lemma}\label{lem:remainder}
+	Suppose Assumption~\ref{assump:L_smooth} holds and iterates $\mathbf{w}^{(i,k)}$ are obtained via Algorithm~XX. Then,
+	\begin{align}
+		\mathbf{w}^{(i,K)} - \mathbf{w}^{(i,0)} &= -\eta \sum_{k = 1}^K \mathbf{q}^{(i,k)} + \eta^2 \mathbf{r}^{(i,0)},
+	\end{align}
+	where
+	\begin{align}
+		\mathbf{r}^{(i,0)} = \sum_{k=1}^K \sum_{j=1}^{k-1} \mathbf{S}^{(i,k)} \left(\prod_{j' = j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right) \mathbf{q}^{(i,j)},
+	\end{align}
+	\begin{align}
+		\mathbf{q}^{(i,k)} = \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} F_{m,k}(\mathbf{w}^{(i,0)}),~~~\mathbf{S}^{(i,k)} = \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} \mathbf{H}_{m,k}^{(i,k)},
+	\end{align}
+	and we apply the convention
+	\begin{align}
+		\prod_{j' = a+1}^a (\mathbf{I} - \eta \mathbf{S}^{(i,j')}) = 1,~a \in \mathbb{N}_{> 0}.
+	\end{align}
+\end{lemma}
+
+\begin{proof}
+	The gradient of the local objective $F_{m,k}$ can be written as 
+	\begin{align}
+		\nabla F_{m,k}(\mathbf{w}^{(i,k-1)}) = \nabla F_{m,k}(\mathbf{w}^{(i,0)}) + \nabla F_{m,k}(\mathbf{w}^{(i,k-1)}) - \nabla F_{m,k}(\mathbf{w}^{(i,0)}).
+	\end{align}
+	Applying the multivariate Taylor theorem with integral remainder form,
+	\begin{align}
+		\nabla F_{m,k}(\mathbf{w}^{(i,k-1)}) - \nabla F_{m,k}(\mathbf{w}^{(i,0)}) = \int_0^1 \nabla^2 F_{m,k}(\mathbf{w}^{(i,0)} - t(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)}))\mathrm{d}t (\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)}).
+	\end{align}
+	Let 
+	\begin{align}
+		H_{m,k}^{(i,k)} = \nabla^2 F_{m,k}(\mathbf{w}^{(i,0)} + t(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)}).
+	\end{align}
+	By Assumption~\ref{assump:L_smooth},
+	\begin{align}
+		\|H_{m,k}^{(i,k)}\| \leq L.
+	\end{align}
+	
+	The update rule in (\ref{eq:update_rule}) can then be written as 
+	\begin{align}
+		w^{(i,k)} - w^{(i,k-1)} = -\eta \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} \left(\nabla F_{m,k}(\mathbf{w}^{(i,0)}) + H_{m,k}^{(i,k)}(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)})\right).
+	\end{align}
+	Now define 
+	\begin{align}
+		\mathbf{q}^{(i,k)} = \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} F_{m,k}(\mathbf{w}^{(i,0)}),~~~\mathbf{S}^{(i,k)} = \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} \mathbf{H}_{m,k}^{(i,k)}.
+	\end{align}
+	Then, 
+	\begin{align}
+		\mathbf{w}^{(i,k)} - \mathbf{w}^{(i,k)} = -\eta \mathbf{q}^{(i,k)} - \eta \mathbf{S}^{(i,k)}(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)}),
+	\end{align}
+	and 
+	\begin{align}
+		\mathbf{w}^{(i,k)} - \mathbf{w}^{(i,0)} = (\mathbf{I} - \eta \mathbf{S}^{(i,k)})(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)}) - \eta \mathbf{q}^{(i,k)}.
+	\end{align}
+	We then have 
+	\begin{align}
+		&\mathbf{w}^{(i,K)} - \mathbf{w}^{(i,0)}\notag\\
+		&= \sum_{k=1}^K \mathbf{w}^{(i,k)} - \mathbf{w}^{(i,k-1)}\notag\\
+		&= \sum_{k=1}^K \left(-\eta \mathbf{q}^{(i,k)} - \eta \mathbf{S}^{(i,k)}(\mathbf{w}^{(i,k-1)} - \mathbf{w}^{(i,0)})\right).
+	\end{align}
+	Note that 
+	\begin{align}
+		&\mathbf{w}^{(i,2)} - \mathbf{w}^{(i,0)}\notag\\
+		&= (\mathbf{I} - \mathbf{S}^{(i,1)})(\mathbf{w}^{(i,1)} - \mathbf{w}^{(i,0)}) - \eta \mathbf{q}^{(i,2)}\notag\\
+		&= -\eta\left[(\mathbf{I} - \eta \mathbf{S}^{(i,1)})\mathbf{q}^{(i,1)} - \mathbf{q}^{(i,2)}\right].
+	\end{align}
+	
+	It then follows that 
+	\begin{align}
+		\mathbf{w}^{(i,K)} - \mathbf{w}^{(i,0)} = -\eta \sum_{k = 1}^K \mathbf{q}^{(i,k)} + \eta^2 \sum_{k=1}^K \sum_{j=1}^{k-1} \mathbf{S}^{(i,k)} \left(\prod_{j' = j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right) \mathbf{q}^{(i,j)},
+	\end{align}
+	where we use the convention
+	\begin{align}
+		\prod_{j' = a+1}^a (\mathbf{I} - \eta \mathbf{S}^{(i,j')}) = 1,~a \in \mathbb{N}_{> 0}.
+	\end{align}
+	
+	Let 
+	\begin{align}
+		\mathbf{r}^{(i,0)} = \sum_{k=1}^K \sum_{j=1}^{k-1} \mathbf{S}^{(i,k)} \left(\prod_{j' = j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right) \mathbf{q}^{(i,j)}.
+	\end{align}
+	Then,
+	\begin{align}
+		\mathbf{w}^{(i,K)} - \mathbf{w}^{(i,0)} &= -\eta \sum_{k = 1}^K \mathbf{q}^{(i,k)} + \eta^2 \mathbf{r}^{(i,0)},
+	\end{align}
+	as required.
+\end{proof}
+
+\begin{lemma}\label{lem:remainder_square}
+	Suppose Assumptions~\ref{assump:L_smooth} and \ref{assump:heterogeneity} hold. Then, 
+	\begin{align}
+		&\|\mathbf{r}^{(i,0)}\| \leq \sum_{k=1}^K \sum_{j=1}^{k-1} \left(L\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\right)\left(\prod_{j' = j+1}^{k-1} \left(1 + \eta L \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|}\right)\right)\notag\\
+		&~~~\cdot\left(C\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right) + |\sigma(j)|\alpha + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|\right).\notag\\
+	\end{align}
+\end{lemma}
+
+\begin{proof}
+	By the submultiplicativity of $\|\cdot\|$, the triangle inequality, and the definition of $\mathbf{r}^{(i,0)}$, 
+	\begin{align}
+		\|\mathbf{r}^{(i,0)}\| &= \left\|\sum_{k=1}^K \sum_{j=1}^{k-1} \mathbf{S}^{(i,k)}\left(\prod_{j' = j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right)\mathbf{q}^{(i,j)}\right\|\notag\\
+		&\leq \sum_{k=1} \sum_{j=1}^{k-1} \|\mathbf{S}^{(i,k)}\|\left\|\prod_{j'= j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right\|\|\mathbf{q}^{(i,j)}\|.
+	\end{align}
+	We now bound each term individually:
+	\begin{align}
+		A_1 &= \left\|\prod_{j'= j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right\|\notag\\
+		&\overset{(a)}{\leq} \prod_{j' = j+1}^{k-1} \|\mathbf{I} - \eta \mathbf{S}^{(i,j')}\|\notag\\
+		&= \prod_{j' = j+1}^{k-1} \left\|\mathbf{I} - \eta \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|} \mathbf{H}_{m,j'}^{(i,j')}\right\|\notag\\
+		&\overset{(b)}{\leq} \prod_{j'= j+1}^{k-1} \left(\|\mathbf{I}\| + \eta \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|} \|\mathbf{H}_{m,j'}\|\right)\notag\\
+		&\overset{(c)}{\leq} \prod_{j' = j+1}^{k-1} \left(1 + \eta \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|} L\right),
+	\end{align}
+	where (a) and (b) follow from the triangle inequality, and (c) follows from Assumption~\ref{assump:L_smooth}.
+	
+	\begin{align}
+		A_2 &= \|\mathbf{S}^{(i,k)}\|\notag\\
+		&= \left\|\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} \mathbf{H}_{m,k}^{(i,k)}\right\|\notag\\
+		&\leq L \sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|},
+	\end{align}
+	which follows from Assumption~\ref{assump:L_smooth}.
+	
+	\begin{align}
+		A_3 &= \|\mathbf{q}^{(i,j)}\|\notag\\
+		&= |\sigma(j)|\left\|\frac{1}{|\sigma(j)|}\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|} \nabla F_{m,j}(\mathbf{w}^{(i,0)})\right\|\notag\\
+		&\leq \left\|\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|} F_{m,j}(\mathbf{w}^{(i,0)}) - \sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)})\right\| + |\sigma(j)|\left\|\frac{1}{|\sigma(j)|} \sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)})\right\|\notag\\
+		&~~~ + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|\notag\\
+		&\leq \sum_{m \in \sigma(j)} \left\|\frac{1}{|\mathcal{B}_m|} \sum_{\xi \in \mathcal{B}_{m,j}} \nabla \ell(\mathbf{w}^{(i,0)}) - \frac{1}{|\mathcal{B}_m|} \sum_{\xi \in \mathcal{B}_m} \nabla \ell(\mathbf{w},\xi)\right\|\notag\\
+		&~~~ + |\sigma(j)|\left\|\frac{1}{|\sigma(j)|} \sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)})\right\| + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|\notag\\
+		&\leq \sum_{m \in \sigma(j)} \left|\frac{1}{|\mathcal{B}_m|}(|\mathcal{B}_m| - |\mathcal{B}_{m,j}|)C\right|\notag\\
+		&~~~ + |\sigma(j)|\left\|\frac{1}{|\sigma(j)|} \sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)})\right\| + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|\notag\\
+		&\leq C\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right) + |\sigma(j)|\alpha + |\sigma(j)|\|\nabla F(\mathbf{w}^{(i,0)})\|,
+	\end{align}
+	which follows from Assumption~\ref{assump:heterogeneity}.
+\end{proof}
+
+\begin{lemma}
+	Suppose Assumptions~\ref{assump:L_smooth} and \ref{assump:heterogeneity} hold. Then,
+	\begin{align}
+		&\|\mathbf{r}^{(i,0)}\|^2\notag\\
+		&\leq K\sum_{k = 1}^K (k-1)\sum_{j=1}^{k-1} L^2\left(\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\right)^2 \left(\prod_{j'= j+1}^{k-1} \left(1 + \eta L \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|}\right)^2\right) \notag\\
+		&~~~\cdot\left( 2|\sigma(j)|\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right)^2 + 4|\sigma(j)|^2\left(\alpha^2 + \|\nabla F(\mathbf{w}^{(i,0)})\|^2\right)\right)\notag\\
+	\end{align}
+\end{lemma}
+
+\begin{proof}
+	First note that by Jensen's inequality,
+	\begin{align}
+		\left\|\sum_{k=1}^K \mathbf{x}_k\right\|^2 \leq K \sum_{i=1}^K \|\mathbf{x}_k\|^2,~\mathbf{x}_k \in \mathbb{R}^d,~k = 1,\ldots,K.
+	\end{align}
+	We then have,
+	\begin{align}
+		\|\mathbf{r}^{(i,0)}\|^2 \leq K \sum_{k=1}^K (k-1) \sum_{j=1}^{k-1} \|\mathbf{S}^{(i,k)}\|^2 \left\|\prod_{j'= j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right\|^2 \|\mathbf{q}^{(i,j)}\|^2.
+	\end{align}
+	We now bound each term individually:
+	\begin{align}
+		B_1 &= \left\|\prod_{j'= j+1}^{k-1} (\mathbf{I} - \eta \mathbf{S}^{(i,j')})\right\|^2\notag\\
+		&\leq \prod_{j' = j+1}^{k-1} \left(1 + \eta L \sum_{m \in \sigma(j')} \frac{|\mathcal{B}_{m,j'}|}{|\mathcal{B}_m|}\right)^2.
+	\end{align}
+	
+	\begin{align}
+		B_2 &= \|\mathbf{S}^{(i,k)}\|^2\notag\\
+		&= \left\|\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|} \mathbf{H}_{m,k}^{(i,k)}\right\|^2 \notag\\
+		&\leq L^2 \left(\sum_{m \in \sigma(k)} \frac{|\mathcal{B}_{m,k}|}{|\mathcal{B}_m|}\right)^2.
+	\end{align}
+	
+	\begin{align}
+		B_3 &= \|\mathbf{q}^{(i,j)}\|^2\notag\\
+		&= \left\|\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|} \nabla F_{m,j}(\mathbf{w}^{(i,0)}) - \nabla F_m(\mathbf{w}^{(i,0)}) + \nabla F_m(\mathbf{w}^{(i,0)})\right\|^2\notag\\
+		&\leq 2\left\|\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\nabla F_{m,j}(\mathbf{w}^{(i,0)}) - \nabla F_m(\mathbf{w}^{(i,0)})\right\|^2 + 2\left\|\sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)})\right\|^2\notag\\
+		&\leq 2|\sigma(j)|\sum_{m \in \sigma(j)}\left\|\frac{1}{|\mathcal{B}_m|} \sum_{\xi \in \mathcal{B}_{m,j}} \nabla \ell(\mathbf{w}^{(i,0)}) - \frac{1}{|\mathcal{B}_{m}|} \sum_{\xi \in \mathcal{B}_m} \nabla \ell(\mathbf{w}^{(i,0)},\xi)\right\|^2\notag\\
+		&~~~ + 4|\sigma(j)|^2 \left\|\frac{1}{|\sigma(j)|} \sum_{m \in \sigma(j)} \nabla F_m(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)})\right\| + 4|\sigma(j)|^2 \|\nabla F(\mathbf{w}^{(i,0)})\|^2\notag\\
+		&\leq 2|\sigma(j)|\sum_{m \in \sigma(j)} \left(1 - \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|}\right)^2 + 4|\sigma(j)|^2\left(\alpha^2 + \|\nabla F(\mathbf{w}^{(i,0)})\|^2\right).
+		%		
+		%		&= |\sigma(j)|^2 \left\|\frac{1}{|\sigma(j)|}\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|} \nabla F_{m,j}(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)}) + \nabla F(\mathbf{w}^{(i,0)})\right\|^2\notag\\
+		%		&\overset{(a)}{\leq} 2|\sigma(j)|^2\left\|\frac{1}{|\sigma(j)|}\sum_{m \in \sigma(j)} \frac{|\mathcal{B}_{m,j}|}{|\mathcal{B}_m|} \nabla F_{m,j}(\mathbf{w}^{(i,0)}) - \nabla F(\mathbf{w}^{(i,0)})\right\|^2 + 2|\sigma(j)|^2\|\nabla F(\mathbf{w}^{(i,0)})\|^2\notag\\
+		%		&\overset{(b)}{\leq} 2|\sigma(j)|^2(\alpha^2 + \|\nabla F(\mathbf{w}^{(i,0)})\|^2),
+	\end{align}
+	%	where (a) follows from Jensen's inequality and (b) follows from Assumption~\ref{assump:heterogeneity}.
+\end{proof}
+
+\subsection{Proof of Theorem~XX}
+
+As $F(\mathbf{w})$ is $L$-smooth,
+\begin{align}
+	F(\mathbf{w}^{(i+1,0)}) - F(\mathbf{w}^{(i,0)}) \leq \langle \nabla F(\mathbf{w}^{(i,0)}), \mathbf{w}^{(i+1,0)} - \mathbf{w}^{(i,0)}\rangle + \frac{L}{2}\|\mathbf{w}^{(i+1,0)} - \mathbf{w}^{(i,0)}\|^2.
+\end{align}
+By Lemma~\ref{lem:remainder}, 
+\begin{align}
+	\langle \nabla F(\mathbf{w}^{(i,0)}), \mathbf{w}^{(i+1,0)} - \mathbf{w}^{(i,0)}\rangle &\leq \langle \nabla F(\mathbf{w}^{(i,0)}), -\eta M \nabla F(\mathbf{w}^{(i,0)}) + \eta^2 \mathbf{r}^{(i,0)}\rangle\notag\\
+	&\leq -\eta M \|\nabla F(\mathbf{w}^{(i,0)})\|^2 + \eta^2 \|\nabla F(\mathbf{w}^{(i,0)})\|\mathbf{r}^{(i,0)}\|.
+\end{align}
+Write 
+\begin{align}
+	\|\mathbf{r}^{(i,0)}\| &= U_1 + U_2\|\nabla F(\mathbf{w}^{(i,0)})\|\notag\\
+	\|\mathbf{r}^{(i,0)}\|^2 &= V_1 + V_2\|\nabla F(\mathbf{w}^{(i,0)})\|^2.
+\end{align}
+
+Hence, 
+\begin{align}
+	\langle \nabla F(\mathbf{w}^{(i,0)}), \mathbf{w}^{(i+1,0)} - \mathbf{w}^{(i,0)}\rangle &\leq -\eta M\|\nabla F(\mathbf{w}^{(i,0)})\|^2 + \eta^2\|\nabla F(\mathbf{w}^{(i,0)})\|(U_1 + U_2\|\nabla F(\mathbf{w}^{(i,0)})\|)\notag\\
+	&\leq -\left(\eta M - \eta^2 U_2 + \frac{\eta^2}{2}\right)\|\nabla F(\mathbf{w}^{(i,0)})\|^2 + \frac{\eta U_1^2}{2}.
+\end{align}
+We also have 
+\begin{align}
+	\frac{L}{2}\|\mathbf{w}^{(i+1,0)} - \mathbf{w}^{(i,0)}\|^2 \leq L\eta^4 M^2 \|\nabla F(\mathbf{w}^{(i,0)}\|^2 + L\eta^4(V_1 + \|\nabla F(\mathbf{w}^{(i,0)})V_2).
+\end{align}
+As such,
+\begin{align}
+	F(\mathbf{w}^{(i+1,0)} - F(\mathbf{w}^{(i,0)}) \leq \left(\eta^2/2 + \eta^2 U_2 - \eta M + L\eta^4V_2\right)\|\nabla F(\mathbf{w}^{(i,0)}) + \eta U_1^2/2 + L\eta^4 V_1.
+\end{align}
+Note that for $\eta$ sufficiently small, 
+\begin{align}
+	-\eta M + \eta^2/2 + \eta^4 U_2 + L\eta^4 M^2 + L\eta^2V_2 \leq -\frac{1}{2}\eta M.
+\end{align}
+This implies that
+\begin{align}
+	F(\mathbf{w}^{(i+1,0)}) - F(\mathbf{w}^{(i,0)}) \leq -\eta M \mu(F(\mathbf{w}^{(i,0)}) - F^*) + \eta U_1^2/2 + L\eta^4 V_1.
+\end{align}
+Unrolling, we obtain 
+\begin{align}
+	F(\mathbf{w}^{(K,0)}) - F^* \leq (F(\mathbf{w}^{(0,0)}) - F^*)(1 - \eta M \mu)^K + \frac{1}{\eta M \mu}\left(\eta U_1^2/2 + L\eta^4 V_1\right). 
+\end{align}
+
+\begin{credits}
+\subsubsection{\ackname} %A bold run-in heading in small font size at the end of the paper is
+%used for general acknowledgments, for example: This study was funded
+%by X (grant number Y).
+
+\subsubsection{\discintname}
+The authors have no competing interests. 
+\end{credits}
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+% \bibliographystyle{splncs04}
+% \bibliography{mybibliography}
+%% Note that this preceding line implies that you store your BibTeX references in a file called 'mybibliography.bib'. If you instead store your references in a file with a different name, for instance 'references.bib', the preceding line should read '\bibliography{references}'. Whatever you do, DO NOT put the file name extension .bib inside the \bibliography command; this will trip up LaTeX compilers. 
+%
+% If you do not want to use BibTeX, you can also type up the bibliography exactly as you see fit, using the following structure:
+\begin{thebibliography}{8}
+% Note that this number 8 reserves an amount of space (equal to the natural width of the given number) for the label of your references; if you have more than 9 references, you will want to change this number to 18. If you have more than 19 references, this number is best changed to 88. If you have more than 99 references, I salute you.
+\bibitem{ref_article1}
+Author, F.: Article title. Journal \textbf{2}(5), 99--110 (2016)
+
+\bibitem{ref_lncs1}
+Author, F., Author, S.: Title of a proceedings paper. In: Editor,
+F., Editor, S. (eds.) CONFERENCE 2016, LNCS, vol. 9999, pp. 1--13.
+Springer, Heidelberg (2016). \doi{10.10007/1234567890}
+
+\bibitem{ref_book1}
+Author, F., Author, S., Author, T.: Book title. 2nd edn. Publisher,
+Location (1999)
+
+\bibitem{ref_proc1}
+Author, A.-B.: Contribution title. In: 9th International Proceedings
+on Proceedings, pp. 1--2. Publisher, Location (2010)
+
+\bibitem{ref_url1}
+LNCS Homepage, \url{http://www.springer.com/lncs}, last accessed 2023/10/25
+\end{thebibliography}
+\end{document}
