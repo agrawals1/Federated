@@ -3,13 +3,7 @@ import os
 import boto3
 from botocore.client import Config
 
-
-s3 = boto3.resource('s3',
-                    endpoint_url='http://127.0.0.1:9000',
-                    aws_access_key_id='AKIAUAWARWF4SW36VYXP',
-                    aws_secret_access_key='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',
-                    config=Config(signature_version='s3v4'),
-                    region_name='us-west-1')
+s3 = None
 
 # upload a file from local file system './remote_storage.py' to bucket 'songs' with 'remote_storage.py' as the object name.
 # s3.create_bucket(Bucket='fedml')
