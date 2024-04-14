@@ -373,14 +373,14 @@ class FedAvgAPI(object):
                 self.model_trainer.set_model_params(w_global)
                 # update global weights
                 w_avg = self._aggregate_Scaffold(w_locals)
-                # server optimizer
-                self.opt.zero_grad()
-                opt_state = self.opt.state_dict()
-                self._set_model_global_grads(w_avg)
-                self._instanciate_opt()
-                self.opt.load_state_dict(opt_state)
-                self.opt.step()
-                w_global = self.model_trainer.get_model_params()
+                # # server optimizer
+                # self.opt.zero_grad()
+                # opt_state = self.opt.state_dict()
+                # self._set_model_global_grads(w_avg)
+                # self._instanciate_opt()
+                # self.opt.load_state_dict(opt_state)
+                # self.opt.step()
+                # w_global = self.model_trainer.get_model_params()
                 model_path = os.path.join(models_dir, self.args.run_name, f'updated_w_global.pt')
                 os.makedirs(os.path.join(models_dir, self.args.run_name), exist_ok=True)
                 torch.save(w_global, model_path)

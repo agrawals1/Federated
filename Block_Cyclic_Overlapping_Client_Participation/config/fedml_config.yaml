@@ -2,7 +2,7 @@ comm_args:
   backend: sp
 common_args:
   data_split: True
-  overlap_type: MoreClients
+  overlap_type: Adjacent
   # alpha_active: 1.0
   alpha_dirichlet: 0.1
   dirichlet_seed: 2152041540
