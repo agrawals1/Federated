@@ -81,7 +81,7 @@ class Client:
     
     def train_participation_normalised_Scaffold(self, part_cnt, current_part_num, c_model_global_param, w_global=None):
         if current_part_num not in self.c_models_local:
-            self.c_models_local[current_part_num] = deepcopy(self.model_trainer.model).cpu()
+            self.c_models_local[current_part_num] = deepcopy(self.model_trainer.model)
             for name, param in self.c_models_local[current_part_num].named_parameters():
                 param.data *= 0
         c_model_global_param = deepcopy(c_model_global_param)
@@ -91,10 +91,16 @@ class Client:
         # Calculate the number of batches per part
         total_batches = len(train_data)
         batches_per_part = total_batches // part_cnt
-
-        # Determine the start and end index for the current part
-        start_idx = batches_per_part * current_part_num
-        end_idx = start_idx + batches_per_part if current_part_num < part_cnt - 1 else total_batches
+        
+        if part_cnt > total_batches:
+             # Determine the start and end index for the current part
+            start_idx = current_part_num % total_batches
+            end_idx = start_idx + 1
+        
+        else:
+            # Determine the start and end index for the current part
+            start_idx = batches_per_part * current_part_num
+            end_idx = start_idx + batches_per_part if current_part_num < part_cnt - 1 else total_batches
 
         # Select the slice of training data for the current part
         train_data_slice = train_data[start_idx:end_idx]
@@ -104,14 +110,14 @@ class Client:
 
         # Retrieve and return the updated model weights
         weights = self.model_trainer.get_model_params()
-        c_new_para = self.c_models_local[current_part_num].cpu().state_dict()
+        c_new_para = self.c_models_local[current_part_num].state_dict()
         c_delta_para = {}
         weights_delta = {}
         for key in weights:
-            c_new_para[key] = c_new_para[key] - c_model_global_param[key].cpu() + \
+            c_new_para[key] = c_new_para[key] - c_model_global_param[key] + \
                             (w_global[key] - weights[key]) / (iteration_cnt * self.args.learning_rate)
-            c_delta_para[key] = c_new_para[key] - c_model_local_param[key].cpu()
-            weights_delta[key] = weights[key] - w_global[key].cpu()
+            c_delta_para[key] = c_new_para[key] - c_model_local_param[key]
+            weights_delta[key] = weights[key] - w_global[key]
         self.c_models_local[current_part_num].load_state_dict(c_new_para)
         return weights_delta, c_delta_para
 

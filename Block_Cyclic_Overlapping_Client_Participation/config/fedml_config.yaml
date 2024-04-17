@@ -2,23 +2,23 @@ comm_args:
   backend: sp
 common_args:
   data_split: True
-  overlap_type: Adjacent
+  overlap_type: MoreGroups
   # alpha_active: 1.0
-  alpha_dirichlet: 0.1
+  alpha_dirichlet: 100.0
   dirichlet_seed: 2152041540
   config_version: dev
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_COCP
-  overlap_num: 7
+  overlap_num: 6
   # overlap_percentage: 1.0
   random_seed: 0
   # sampling_fun: client_sampling_cyclic_overlap_pattern
   training_type: simulation
   var_epoch: 0
   group_norm_size: 0
-  AdaptiveDecay: 4
-  lr_update_freq: 2
+  AdaptiveDecay: 2
+  lr_update_freq: 5
   group_wise_models: False
 data_args:
   data_cache_dir: ~/fedml_data
@@ -34,7 +34,7 @@ tracking_args:
   enable_tracking: False
   enable_wandb: True
   # run_name: Dir:0.5_decay:4_update_freq:2_Overlap:3_Dataset:CIFAR100_Remark:PreTrained
-  run_name: moreClients_Overlap7
+  run_name: Dir:100_moreGroups_Overlap6_Scaffold_Debugging
   wandb_entity: shubham22124
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_project: ECML_TEST_CIFAR100
@@ -51,10 +51,10 @@ train_args:
   total_cycles: 150
   epochs: 2
   federated_optimizer: Scaffold
-  learning_rate: 0.01
+  learning_rate: 0.2
   server_lr: 0.01
   momentum: 0.9
   num_groups: 5
-  weight_decay: 0.000001
+  weight_decay: 0.00001
 validation_args:
   frequency_of_the_test: 1

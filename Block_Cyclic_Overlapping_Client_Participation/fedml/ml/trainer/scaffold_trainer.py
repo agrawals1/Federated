@@ -8,45 +8,33 @@ import logging
 
 class ScaffoldModelTrainer(ClientTrainer):
     def get_model_params(self):
-        return self.model.cpu().state_dict()
+        return self.model.state_dict()
 
     def set_model_params(self, model_parameters):
         self.model.load_state_dict(model_parameters)
 
     def train(self, train_data, device, args, c_model_global_params, c_model_local_params):
         model = self.model
-
         model.to(device)
         model.train()
         num_epochs = args.epochs if args.var_epoch == 0 else random.randint(1,5)
-        # train and update
-        criterion = nn.CrossEntropyLoss().to(device)  # pylint: disable=E1102
-        # if args.client_optimizer == "sgd":
-        #     optimizer = torch.optim.SGD(
-        #         filter(lambda p: p.requires_grad, self.model.parameters()),
-        #         lr=args.learning_rate,
-        #     )
-        # else:
-        #     optimizer = torch.optim.Adam(
-        #         filter(lambda p: p.requires_grad, self.model.parameters()),
-        #         lr=args.learning_rate,
-        #         weight_decay=args.weight_decay,
-        #         amsgrad=True,
-        #     )
+        criterion = nn.CrossEntropyLoss().to(device)
+        
+        # Setting up the optimizer based on the args configuration
         if args.client_optimizer == "sgd":
             optimizer = torch.optim.SGD(
-                filter(lambda p: p.requires_grad, self.model.parameters()),
+                filter(lambda p: p.requires_grad, model.parameters()),
                 lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay
             )
-            
-           
         elif args.client_optimizer == "CosAnnealing":
-            optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=num_epochs, eta_min=.0001)
-        
+            optimizer = torch.optim.SGD(
+                filter(lambda p: p.requires_grad, model.parameters()), 
+                lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay
+            )
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=.0001)
         else:
             optimizer = torch.optim.Adam(
-                filter(lambda p: p.requires_grad, self.model.parameters()),
+                filter(lambda p: p.requires_grad, model.parameters()),
                 lr=args.learning_rate,
                 weight_decay=args.weight_decay,
                 amsgrad=True,
@@ -54,48 +42,34 @@ class ScaffoldModelTrainer(ClientTrainer):
 
         epoch_loss = []
         iteration_cnt = 0
-        for epoch in range(args.epochs):
+        for epoch in range(num_epochs):
             batch_loss = []
             for batch_idx, (x, labels) in enumerate(train_data):
                 x, labels = x.to(device), labels.to(device)
-                model.zero_grad()
+                optimizer.zero_grad()
                 log_probs = model(x)
-                loss = criterion(log_probs, labels)  # pylint: disable=E1102
+                loss = criterion(log_probs, labels)
                 loss.backward()
 
-                # Uncommet this following line to avoid nan loss
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                # Apply SCAFFOLD correction before optimizer step
+                current_lr = optimizer.param_groups[0]['lr']  # Get the current learning rate from the optimizer
+                for name, param in model.named_parameters():
+                    param.grad += current_lr * (c_model_global_params[name] - c_model_local_params[name])
 
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # Apply gradient clipping
                 optimizer.step()
                 if args.client_optimizer == "CosAnnealing":
-                    scheduler.step()
-                # logging.info(
-                #     "Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                #         epoch,
-                #         (batch_idx + 1) * args.batch_size,
-                #         len(train_data) * args.batch_size,
-                #         100.0 * (batch_idx + 1) / len(train_data),
-                #         loss.item(),
-                #     )
-                # )
-                current_lr = self.args.learning_rate
-                for name, param in model.named_parameters():
-                    # logging.debug(f"c_model_global[name].device : {c_model_global[name].device}, \
-                    #     c_model_global_params[name].device : {c_model_local_params[name].device}")
-                    param.data = param.data - current_lr * \
-                        check_device((c_model_global_params[name] - c_model_local_params[name]), param.data.device)
-                iteration_cnt += 1
+                    scheduler.step()  # Update the learning rate according to the scheduler
+
                 batch_loss.append(loss.item())
-            if len(batch_loss) == 0:
-                epoch_loss.append(0.0)
-            else:
-                epoch_loss.append(sum(batch_loss) / len(batch_loss))
-            logging.info(
-                "Client Index = {}\tEpoch: {}\tLoss: {:.6f}".format(
-                    self.id, epoch, sum(epoch_loss) / len(epoch_loss)
-                )
-            )
+                iteration_cnt += 1
+
+            epoch_loss.append(sum(batch_loss) / len(batch_loss) if batch_loss else 0.0)
+            # Example of logging, uncomment and modify as needed
+            # print(f"Client Index = {self.id}\tEpoch: {epoch}\tLoss: {epoch_loss[-1]:.6f}")
+        
         return iteration_cnt
+
 
 
     def test(self, test_data, device, args):

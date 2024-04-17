@@ -267,28 +267,44 @@ def load_dataset(dataset_name, transform):
 
 def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
     transform = transforms.Compose([
-    transforms.ToTensor(),               # Convert to tensor (required for training)
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize the images
-])
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
     
     train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 
-    all_train_x, all_train_y, all_test_x, all_test_y = process_dataset(train_dataset, test_dataset)
+    all_data_x, all_data_y = process_dataset(train_dataset, test_dataset)
     
-    # Splitting data using Dirichlet distribution
-    train_client_idcs, stats = dirichlet_distribution(train_dataset, num_clients, alpha, least_samples = 32, seed=args.dirichlet_seed)
+    # Applying Dirichlet distribution to the combined dataset
+    client_idcs, stats = dirichlet_distribution(all_data_y, num_clients, alpha, least_samples=32, seed=args.dirichlet_seed)
     plot_client_data_distribution(args, stats, num_classes)
     
     # Construct data dictionaries with class-wise split
     train_data = {}
     test_data = {}
-    for client_idx, idcs in train_client_idcs.items():
-        train_data[client_idx] = {"x": [all_train_x[i] for i in idcs], "y": [all_train_y[i] for i in idcs]}
-        # TODO: Handle "news" dataset's lengths if provided
 
-    for client_idx, idcs in test_client_idcs.items():
-        test_data[client_idx] = {"x": [all_test_x[i] for i in idcs], "y": [all_test_y[i] for i in idcs]}
-        # TODO: Handle "news" dataset's lengths if provided
+    for client_idx, idcs in client_idcs.items():
+        client_data_x = [all_data_x[i] for i in idcs]
+        client_data_y = [all_data_y[i] for i in idcs]
+
+        # Group data by class
+        class_data = {}
+        for x, y in zip(client_data_x, client_data_y):
+            if y not in class_data:
+                class_data[y] = {'x': [], 'y': []}
+            class_data[y]['x'].append(x)
+            class_data[y]['y'].append(y)
+
+        # Stratified split for each class
+        train_data[client_idx] = {'x': [], 'y': []}
+        test_data[client_idx] = {'x': [], 'y': []}
+        for cls in class_data:
+            cls_data = class_data[cls]
+            split_idx = int(len(cls_data['x']) * 0.8)  # 80-20 split
+            train_data[client_idx]['x'].extend(cls_data['x'][:split_idx])
+            train_data[client_idx]['y'].extend(cls_data['y'][:split_idx])
+            test_data[client_idx]['x'].extend(cls_data['x'][split_idx:])
+            test_data[client_idx]['y'].extend(cls_data['y'][split_idx:])
 
     clients = list(range(num_clients))
     groups = []

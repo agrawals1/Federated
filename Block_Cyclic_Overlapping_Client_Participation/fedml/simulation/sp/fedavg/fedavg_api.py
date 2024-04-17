@@ -18,6 +18,7 @@ from fedml.ml.aggregator.agg_operator import FedMLAggOperator
 current_dir = os.path.dirname(__file__)
 base_dir = os.path.join(current_dir, "../../../..")  # Adjust based on the relative path
 models_dir = os.path.join(base_dir, "models")
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class FedAvgAPI(object):
     def __init__(self, args, device, dataset, model):
@@ -52,14 +53,15 @@ class FedAvgAPI(object):
 
         logging.info("model = {}".format(model))
         if args.federated_optimizer == 'Scaffold':
-            self.model_trainer = ScaffoldModelTrainer(model, None, args)
-            self.c_model_global = copy.deepcopy(self.model_trainer.model).cpu()
+            self.model_trainer = ScaffoldModelTrainer(model.to(self.device), None, args)
+            self.c_model_global = copy.deepcopy(self.model_trainer.model)
             for name, param in self.c_model_global.named_parameters():
                 param.data *= 0
         else:
             self.model_trainer = create_model_trainer(model,None,args)    
-        self._instanciate_opt()
-        self.model = model
+            self._instanciate_opt()
+        self.model = model.to(device)
+        self.model.train()
         logging.info("self.model_trainer = {}".format(self.model_trainer))
         self.group_ids = {client_id: [] for client_id in range(self.args.client_num_in_total)}
         if self.args.overlap_type == 'Adjacent':
@@ -366,21 +368,50 @@ class FedAvgAPI(object):
                 mlops.log_round_info(self.args.comm_round, round_idx)
 
                 # Train clients in the current group
-                w_locals = self._train_clients_for_group(client_group, w_global)
+                w_locals = self._train_clients_for_group(client_group, w_global, round_idx)
 
                 # Update global weights
-                # reset weight after standalone simulation
-                self.model_trainer.set_model_params(w_global)
+                # # reset weight after standalone simulation
+                # self.model_trainer.set_model_params(w_global)
+                if self.args.federated_optimizer == 'Scaffold':
+                    total_weights_delta, total_c_delta_para = self._aggregate_Scaffold(w_locals)
+                    total_norm_dw_agg = sum(v.float().norm().item() for v in total_weights_delta.values())
+                    total_norm_dc_agg = sum(v.float().norm().item() for v in total_c_delta_para.values())
+                    wandb.log({
+                        "total_norm_delta_weights": total_norm_dw_agg,
+                        "total_norm_delta_control_variates": total_norm_dc_agg,
+                        "round": round_idx
+                    })
+                    wandb.log({f"aggregated delta control variates": total_c_delta_para, "aggregated delta weights": total_weights_delta, "round": round_idx})
+                    c_global_para = self.c_model_global.state_dict()
+                    for key in c_global_para:
+                        if c_global_para[key].type() == 'torch.LongTensor':
+                            c_global_para[key] += total_c_delta_para[key].type(torch.LongTensor)
+                        elif c_global_para[key].type() == 'torch.cuda.LongTensor':
+                            c_global_para[key] += total_c_delta_para[key].type(torch.cuda.LongTensor)
+                        else:
+                            c_global_para[key] += total_c_delta_para[key]
+                    self.c_model_global.load_state_dict(c_global_para)
+                    for key in w_global.keys():
+                        if w_global[key].type() == 'torch.LongTensor':
+                            w_global[key] += total_weights_delta[key].type(torch.LongTensor)
+                        elif w_global[key].type() == 'torch.cuda.LongTensor':
+                            w_global[key] += total_weights_delta[key].type(torch.cuda.LongTensor)
+                        else:
+                            w_global[key] += total_weights_delta[key]
+
+                    self.model_trainer.set_model_params(w_global)
+                else:                    
+                    w_avg = self._aggregate(w_locals)
+                    # server optimizer
+                    self.opt.zero_grad()
+                    opt_state = self.opt.state_dict()
+                    self._set_model_global_grads(w_avg)
+                    self._instanciate_opt()
+                    self.opt.load_state_dict(opt_state)
+                    self.opt.step()
                 # update global weights
-                w_avg = self._aggregate_Scaffold(w_locals)
-                # # server optimizer
-                # self.opt.zero_grad()
-                # opt_state = self.opt.state_dict()
-                # self._set_model_global_grads(w_avg)
-                # self._instanciate_opt()
-                # self.opt.load_state_dict(opt_state)
-                # self.opt.step()
-                # w_global = self.model_trainer.get_model_params()
+                w_global = self.model_trainer.get_model_params()
                 model_path = os.path.join(models_dir, self.args.run_name, f'updated_w_global.pt')
                 os.makedirs(os.path.join(models_dir, self.args.run_name), exist_ok=True)
                 torch.save(w_global, model_path)
@@ -399,37 +430,83 @@ class FedAvgAPI(object):
         mlops.log_training_finished_status()
         mlops.log_aggregation_finished_status()
 
-    def _train_clients_for_group(self, client_group, w_global):
-        w_locals = []
-        for idx, client_id in enumerate(client_group):
+    # def _train_clients_for_group(self, client_group, w_global, round_idx):
+    #     w_locals = []
+    #     for idx, client_id in enumerate(client_group):
+    #         client = self.client_list[idx]
+    #         client.update_client(
+    #                 client_id,
+    #                 self.train_data_local_dict[client_id],
+    #                 self.test_data_local_dict[client_id],
+    #                 self.train_data_local_num_dict[client_id],
+    #                 self.group_ids[client_id]
+    #             )
+    #         if self.args.data_split:
+    #             part_cnt = self.participation_counts[client_id]
+    #             current_part_num = self.currently_part_in[client_id]
+    #             if self.args.federated_optimizer == 'Scaffold':
+    #                 dw, dc = client.train_participation_normalised_Scaffold(part_cnt, current_part_num, self.c_model_global.state_dict(), copy.deepcopy(w_global))
+    #                 wandb.log({f"local delta control variates for client {client_id}": dc})
+    #                 w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+    #             else:
+    #                 w = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global))
+    #                 w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+                
+    #             self.currently_part_in[client_id] += 1
+    #         else:
+    #             if self.args.federated_optimizer == 'Scaffold':
+    #                 dw, dc = client.train_Scaffold(copy.deepcopy(w_global), self.c_model_global.state_dict())
+    #                 w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+    #             else:
+    #                 w = client.train(copy.deepcopy(w_global))
+    #                 w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
+            
+    #     return w_locals    
+    
+    def _train_clients_for_group(self, client_group, w_global, round_idx):
+        def train_client(idx, client_id):
             client = self.client_list[idx]
             client.update_client(
-                    client_id,
-                    self.train_data_local_dict[client_id],
-                    self.test_data_local_dict[client_id],
-                    self.train_data_local_num_dict[client_id],
-                    self.group_ids[client_id]
-                )
+                client_id,
+                self.train_data_local_dict[client_id],
+                self.test_data_local_dict[client_id],
+                self.train_data_local_num_dict[client_id],
+                self.group_ids[client_id]
+            )
+            
             if self.args.data_split:
                 part_cnt = self.participation_counts[client_id]
                 current_part_num = self.currently_part_in[client_id]
+                self.currently_part_in[client_id] += 1
                 if self.args.federated_optimizer == 'Scaffold':
                     dw, dc = client.train_participation_normalised_Scaffold(part_cnt, current_part_num, self.c_model_global.state_dict(), copy.deepcopy(w_global))
-                    w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+                    total_norm_dw = sum(v.float().norm().item() for v in dw.values())
+                    total_norm_dc = sum(v.float().norm().item() for v in dc.values())
+                    wandb.log({
+                        f"total_norm_delta_weights_for_client_{client_id}": total_norm_dw,
+                        f"total_norm_delta_control_variates_for_client_{client_id}": total_norm_dc,
+                        "round": round_idx
+                            })
+
+                    return (client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc))
                 else:
                     w = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global))
-                    w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
-                
-                self.currently_part_in[client_id] += 1
+                    return (client.get_sample_number(), copy.deepcopy(w))
             else:
                 if self.args.federated_optimizer == 'Scaffold':
                     dw, dc = client.train_Scaffold(copy.deepcopy(w_global), self.c_model_global.state_dict())
-                    w_locals.append((client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc)))
+                    return (client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc))
                 else:
                     w = client.train(copy.deepcopy(w_global))
-                    w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
-            
-        return w_locals        
+                    return (client.get_sample_number(), copy.deepcopy(w))
+
+        # Use ThreadPoolExecutor to train clients in parallel
+        with ThreadPoolExecutor(max_workers=len(client_group)) as executor:
+            futures = [executor.submit(train_client, idx, client_id) for idx, client_id in enumerate(client_group)]
+            w_locals = [future.result() for future in as_completed(futures)]
+
+        return w_locals
+    
 
     # def _train_clients_for_round(self, round_idx, w_global):
     #     w_locals = []
