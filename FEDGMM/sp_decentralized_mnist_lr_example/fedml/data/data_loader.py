@@ -11,6 +11,7 @@ from .FederatedEMNIST.data_loader import load_partition_data_federated_emnist
 from .ImageNet.data_loader import load_partition_data_ImageNet
 from .Landmarks.data_loader import load_partition_data_landmarks
 from .MNIST.data_loader import load_partition_data_mnist, download_mnist
+from .ZOO.data_loader import load_partition_data_zoo
 from .cifar10.data_loader import load_partition_data_cifar10
 from .cifar10.efficient_loader import efficient_load_partition_data_cifar10
 from .cifar100.data_loader import load_partition_data_cifar100
@@ -255,7 +256,7 @@ def load_synthetic_data(args):
     else:
         full_batch = False
 
-    if dataset_name == "zoo":
+    if dataset_name == "zoo" or dataset_name == 'MNIST_GMM':
         logging.info("load_data. dataset_name = %s" % dataset_name)
         (
             client_num,
@@ -270,7 +271,7 @@ def load_synthetic_data(args):
             test_data_local_dict,
             val_data_local_dict,
             class_num,
-        ) = load_partition_data_mnist(
+        ) = load_partition_data_zoo(
             args,
             args.batch_size
         )

@@ -19,7 +19,7 @@ current_dir = os.path.dirname(__file__)
 base_dir = os.path.join(current_dir, "../../../..")  # Adjust based on the relative path
 models_dir = os.path.join(base_dir, "models")
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from fedml.simulation.sp.fedavg.FEDDFW import DFW
 class FedAvgAPI(object):
     def __init__(self, args, device, dataset, model):
         self.device = device
@@ -59,7 +59,10 @@ class FedAvgAPI(object):
                 param.data *= 0
         else:
             self.model_trainer = create_model_trainer(model,None,args)    
-            self._instanciate_opt()
+            if args.server_optim:
+                self._instanciate_opt()
+            
+            
         self.model = model.to(device)
         self.model.train()
         logging.info("self.model_trainer = {}".format(self.model_trainer))
@@ -96,7 +99,51 @@ class FedAvgAPI(object):
     #     model_path = os.path.join(models_dir, self.args.run_name, f'updated_w_group_{group_id}.pt')
     #     torch.save(updated_w_group, model_path)
     #     self.group_specific_models[group_id].load_state_dict(updated_w_group)
+    
+    def compare_models(self, model1, model2):
+        if model1.keys() != model2.keys():
+            print("Models have different sets of keys")
+            return False
         
+        for key in model1:
+            if torch.equal(model1[key], model2[key]):
+                continue  # If the current items are equal, move to the next
+            else:
+                print(f"Mismatch found at key: {key}")
+                return False  # If any item is not equal, return False immediately
+
+        print("All items matched.")
+        return True  # If all items are matched, return True
+    
+    def compare_params(self, old_params, updated_param_groups):
+        """
+        Compare old parameter values with new values directly from the optimizer's param_groups.
+
+        Args:
+            old_params (dict): The original parameters before updating.
+            updated_param_groups (list): The updated param_groups from the optimizer.
+
+        Returns:
+            bool: True if all parameters match, False otherwise.
+        """
+        # Flatten `updated_param_groups` to match structure of `state_dict`
+        updated_params = {}
+        for group in updated_param_groups:
+            for param in group['params']:
+                updated_params[param] = param.data.clone()  # Make sure to clone to avoid unintended changes
+
+        # Compare against the original parameters in `old_params`
+        for name, tensor in old_params.items():
+            if name not in updated_params:
+                print(f"Missing parameter: {name}")
+                return False
+            if not torch.equal(tensor, updated_params[name]):
+                print(f"Parameter {name} has changed.")
+                return False
+
+        print("All parameters match.")
+        return True
+
     def _set_model_global_grads(self, new_state):
         new_model = copy.deepcopy(self.model_trainer.model)
         new_model.load_state_dict(new_state)
@@ -112,13 +159,16 @@ class FedAvgAPI(object):
     
     
     def _instanciate_opt(self):
-        self.opt = OptRepo.name2cls(self.args.server_optimizer)(
-            # self.model_global.parameters(), lr=self.args.server_lr
-            self.model_trainer.model.parameters(),
-            lr=self.args.server_lr,
-            # momentum=0.9 # for fedavgm
-            eps = 1e-3 #for adaptive optimizer
-        )
+        if self.args.server_optimizer == 'DFW':
+            self.opt = DFW(self.model_trainer.model.parameters(), eta=.001, momentum=0.9, weight_decay=.00001, eps=1e-5)
+        else:            
+            self.opt = OptRepo.name2cls(self.args.server_optimizer)(
+                # self.model_global.parameters(), lr=self.args.server_lr
+                self.model_trainer.model.parameters(),
+                lr=self.args.server_lr,
+                # momentum=0.9 # for fedavgm
+                eps = 1e-3 #for adaptive optimizer
+            )
     
     def update_cycle_wise_metrics(self, round_wise_metrics_local, round_wise_metrics_global, cycle_wise_metrics):
         train_metrics_local, test_metrics_local = round_wise_metrics_local
@@ -228,19 +278,21 @@ class FedAvgAPI(object):
     def _aggregate(self, w_locals):
         training_num = 0
         for idx in range(len(w_locals)):
-            (sample_num, averaged_params) = w_locals[idx]
+            (sample_num, averaged_params, local_loss) = w_locals[idx]
             training_num += sample_num
 
-        (sample_num, averaged_params) = w_locals[0]
+        (sample_num, averaged_params, local_loss) = w_locals[0]
         for k in averaged_params.keys():
             for i in range(0, len(w_locals)):
-                local_sample_number, local_model_params = w_locals[i]
+                local_sample_number, local_model_params, local_loss = w_locals[i]
                 w = local_sample_number / training_num
                 if i == 0:
                     averaged_params[k] = local_model_params[k] * w
+                    averaged_loss = local_loss * w
                 else:
                     averaged_params[k] += local_model_params[k] * w
-        return averaged_params
+                    averaged_loss += local_loss * w
+        return averaged_params, averaged_loss
     
     def _aggregate_Scaffold(self, w_locals):
         # training_num = 0
@@ -401,16 +453,34 @@ class FedAvgAPI(object):
                             w_global[key] += total_weights_delta[key]
 
                     self.model_trainer.set_model_params(w_global)
-                else:                    
-                    w_avg = self._aggregate(w_locals)
-                    # server optimizer
-                    self.opt.zero_grad()
-                    opt_state = self.opt.state_dict()
-                    self._set_model_global_grads(w_avg)
-                    self._instanciate_opt()
-                    self.opt.load_state_dict(opt_state)
-                    self.opt.step()
-                # update global weights
+                else:
+                    w_avg, avg_loss = self._aggregate(w_locals)
+                    if self.args.server_optim and self.args.server_optimizer == 'Adam':                                    
+                        # server optimizer
+                        self.opt.zero_grad()
+                        opt_state = self.opt.state_dict()
+                        self._set_model_global_grads(w_avg)
+                        self._instanciate_opt()
+                        self.opt.load_state_dict(opt_state)
+                        global_model_before = self.model_trainer.get_model_params()
+                        self.opt.step()
+                        global_model_after = self.model_trainer.get_model_params()
+                        print(self.compare_models(global_model_before, global_model_after))
+                    elif self.args.server_optim and self.args.server_optimizer == 'DFW':                                      
+                        # server optimizer
+                        self.opt.zero_grad()
+                        opt_state = self.opt.state_dict()
+                        self._set_model_global_grads(w_avg)
+                        self._instanciate_opt()
+                        self.opt.load_state_dict(opt_state)
+                        global_model_before = copy.deepcopy(self.model_trainer.get_model_params())
+                        param_groups = self.opt.step(avg_loss)
+                        are_params_matching = self.compare_params(global_model_before, param_groups)
+                        print("****************************Do parameters match:", are_params_matching)
+                        # print(self.compare_models(global_model_before, global_model_after))
+                    else:
+                        # update global weights
+                        self.model_trainer.set_model_params(w_avg)
                 w_global = self.model_trainer.get_model_params()
                 model_path = os.path.join(models_dir, self.args.run_name, f'updated_w_global.pt')
                 os.makedirs(os.path.join(models_dir, self.args.run_name), exist_ok=True)
@@ -490,8 +560,8 @@ class FedAvgAPI(object):
 
                     return (client.get_sample_number(), copy.deepcopy(dw), copy.deepcopy(dc))
                 else:
-                    w = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global))
-                    return (client.get_sample_number(), copy.deepcopy(w))
+                    w, loss = client.train_participation_normalised(part_cnt, current_part_num, copy.deepcopy(w_global))
+                    return (client.get_sample_number(), copy.deepcopy(w), loss)
             else:
                 if self.args.federated_optimizer == 'Scaffold':
                     dw, dc = client.train_Scaffold(copy.deepcopy(w_global), self.c_model_global.state_dict())

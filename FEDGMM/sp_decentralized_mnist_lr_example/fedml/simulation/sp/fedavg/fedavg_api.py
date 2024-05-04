@@ -6,6 +6,7 @@ import numpy
 import torch
 import wandb
 import matplotlib.pyplot as plt
+import multiprocessing
 from fedml import mlops
 from fedml.ml.trainer.trainer_creator import create_model_trainer
 from .client import Client
@@ -21,7 +22,7 @@ from model_selection.learning_eval_nostop import \
     FHistoryLearningEvalGradientDecentNoStop, FHistoryLearningEvalNoStop, \
     FHistoryLearningEvalSGDNoStop
 from game_objectives.approximate_psi_objective import approx_psi_eval
-from plotting import PlotElement
+from plot_GMM import PlotElement
 
     
 class FedAvgAPI(object):
@@ -94,8 +95,8 @@ class FedAvgAPI(object):
             psi_eval_max_no_progress=self.args.psi_eval_max_no_progress, psi_eval_burn_in=self.args.psi_eval_burn_in)
         g_global, f_global, learning_args, dev_f_collection, e_dev_tilde = \
             self.model_selection.do_model_selection(
-                x_train=train_data_global.x, z_train=train_data_global.z, y_train=train_data_global.y,
-                x_dev=val_data_global.x, z_dev=val_data_global.z, y_dev=val_data_global.y, verbose=True)
+                x_train=train_data_global['x'].to(device), z_train=train_data_global['z'].to(device), y_train=train_data_global['y'].to(device),
+                x_dev=val_data_global['x'].to(device), z_dev=val_data_global['z'].to(device), y_dev=val_data_global['y'].to(device), verbose=True)
         
         self.eval_history = []
         self.g_state_history = []
@@ -138,9 +139,6 @@ class FedAvgAPI(object):
         g_global = self.model_trainer.get_g_model_params()
         f_global = self.model_trainer.get_f_model_params()
         reg_global = self.model_trainer.get_model_params()
-        # mlops.log_training_status(mlops.ClientConstants.MSG_MLOPS_CLIENT_STATUS_TRAINING)
-        # mlops.log_aggregation_status(mlops.ServerConstants.MSG_MLOPS_SERVER_STATUS_RUNNING)
-        # mlops.log_round_info(self.args.comm_round, -1)
         current_no_progress = 0
         for round_idx in range(self.args.comm_round):
 
@@ -168,56 +166,63 @@ class FedAvgAPI(object):
                     self.train_data_local_num_dict[client_idx],
                 )
 
-                # train on new dataset
-                # mlops.event("train", event_started=True, event_value="{}_{}".format(str(round_idx), str(idx)))
+               
                 w = client.train(copy.deepcopy(g_global), copy.deepcopy(f_global))
                 w_reg = client.train_reg(copy.deepcopy(reg_global))
-                # mlops.event("train", event_started=False, event_value="{}_{}".format(str(round_idx), str(idx)))
-                # self.logging.info("local weights = " + str(w))
                 w_locals.append((client.get_sample_number(), copy.deepcopy(w)))
                 w_locals_reg.append((client.get_sample_number(), copy.deepcopy(w_reg)))
 
-            # update global weights
-            # mlops.event("agg", event_started=True, event_value=str(round_idx))
+        
+            
+    
+
+    # def train_client(self, client, g_global, f_global, reg_global):
+    #     w = client.train(copy.deepcopy(g_global), copy.deepcopy(f_global))
+    #     w_reg = client.train_reg(copy.deepcopy(reg_global))
+    #     return (client.get_sample_number(), copy.deepcopy(w)), (client.get_sample_number(), copy.deepcopy(w_reg))
+
+    # def train(self):
+    #     multiprocessing.set_start_method('spawn', force=True)
+    #     logging.info("self.model_trainer = {}".format(self.model_trainer))
+    #     g_global = self.model_trainer.get_g_model_params()
+    #     f_global = self.model_trainer.get_f_model_params()
+    #     reg_global = self.model_trainer.get_model_params()
+    #     current_no_progress = 0
+    #     for round_idx in range(self.args.comm_round):
+    #         logging.info("################Communication round : {}".format(round_idx))
+
+    #         w_locals = []
+    #         w_locals_reg = []
+
+    #         client_indexes = self._client_sampling(
+    #             round_idx, self.args.client_num_in_total, self.args.client_num_per_round
+    #         )
+    #         logging.info("client_indexes = " + str(client_indexes))
+    #         for idx, client in enumerate(self.client_list):
+    #             # update dataset
+    #             client_idx = client_indexes[idx]
+    #             client.update_local_dataset(
+    #                 client_idx,
+    #                 self.train_data_local_dict[client_idx],
+    #                 self.test_data_local_dict[client_idx],
+    #                 self.train_data_local_num_dict[client_idx],
+    #             )
+    #         client_args = [(self.client_list[idx], g_global, f_global, reg_global) for idx, client_id in enumerate(client_indexes)]
+
+    #         with multiprocessing.Pool() as pool:
+    #             results = pool.starmap(self.train_client, client_args)
+
+    #         w_locals, w_locals_reg = zip(*results)
+
+    #         w_locals = list(w_locals)
+    #         w_locals_reg = list(w_locals_reg)
             w_global = self._aggregate(w_locals)
             w_global_reg = self._aggregate_reg(w_locals_reg)
-
             self.model_trainer.set_g_model_params(w_global[0])
             self.model_trainer.set_f_model_params(w_global[1])
             self.model_trainer.set_model_params(w_global_reg)
-            # mlops.event("agg", event_started=False, event_value=str(round_idx))
-
-            # test results
-            # at last round
-            # if round_idx == self.args.comm_round - 1:
-            #     self._local_test_on_all_clients(round_idx)
-            # per {frequency_of_the_test} round
-            if round_idx % self.args.frequency_of_the_test == 0:
-                if self.args.dataset.startswith("stackoverflow"):
-                    self._local_test_on_validation_set(round_idx)
-                else:
-                    # self._local_test_on_all_clients(round_idx)
-                    mse, obj_train, obj_dev, curr_eval, max_recent_eval, f_of_z_train, f_of_z_dev = self.eval_global_model()
-                
-                if self.args.video_plotter and round_idx % self.args.print_freq == 0:
-                    frame = self.video_plotter.get_new_frame("iter = %d" % round_idx)
-
-                    self.f = self.f.eval()
-                    self.g = self.g.eval()
-
-                    # plot f(z)
-                    frame.add_plot(PlotElement(
-                        self.train_global.w.cpu().numpy(), f_of_z_train.numpy(),
-                        "estimated f(z)", normalize=True))
-
-                    # plot g(x)
-                    g_of_x_plot = self.epsilon_train_history[-1] + self.train_global.y.cpu()
-                    frame.add_plot(PlotElement(self.train_global.w.cpu().numpy(), g_of_x_plot.numpy(),
-                                            "fitted g(x)"))
-
-                    self.f = self.f.train()
-                    self.g = self.g.train()
-                    
+            if round_idx % self.args.frequency_of_the_test == 0:        
+                mse, obj_train, obj_dev, curr_eval, max_recent_eval, f_of_z_train, f_of_z_dev = self.eval_global_model()
                 if round_idx % self.args.print_freq == 0 and self.args.verbose:
                     mean_eval = numpy.mean(self.eval_history[-self.args.print_freq_mul:])
                     print("iteration %d, dev-MSE=%f, train-loss=%f,"
@@ -234,12 +239,7 @@ class FedAvgAPI(object):
 
                     if current_no_progress >= self.args.max_no_progress:
                         break
-        # plot relationship between MSE and eval
-        if self.args.video_plotter:
-            plt.figure()
-            data = pandas.DataFrame({"eval": self.eval_list, "mse": self.mse_list})
-            data.plot.scatter(x="eval", y="mse")
-            plt.savefig("eval_mse.png")
+        
             
         max_i = max(range(len(self.eval_history)), key=lambda i_: self.eval_history[i_])
         if self.args.verbose:
@@ -250,33 +250,35 @@ class FedAvgAPI(object):
         reg_model_final = self.reg_model
         g_final.load_state_dict(self.model_trainer.get_g_model_params())
         reg_model_final.load_state_dict(self.model_trainer.get_model_params())
-        g_pred = g_final(self.test_global.x)
+        g_pred = g_final(self.test_global['x'].to(self.device))
         reg_model_final.to(self.device)
-        reg_pred = reg_model_final(self.test_global.x)
-        mse = float(((g_pred - self.test_global.g) ** 2).mean())
+        reg_pred = reg_model_final(self.test_global['x'].to(self.device))
+        mse = float(((g_pred - self.test_global['g'].to(self.device)) ** 2).mean())
         print("---------------")
         print("finished running methodology on scenario %s" % self.args.scenario_name)
         print("MSE on test ------------------------------>>>>>>>>>>>>>>>>>>", mse)
         print("")
         print("saving results...")
-        x = self.test_global.x.detach().cpu().numpy()
-        g_pred = g_pred.detach().cpu().numpy()
-        g_true = self.test_global.g.detach().cpu().numpy()
-        reg_pred = reg_pred.detach().cpu().numpy()
-        indices = numpy.argsort(x, axis = 0).flatten() 
-        x_sort = x[indices]
-        g_pred_sort = g_pred[indices]
-        g_true_sort = g_true[indices]
-        reg_pred_sort = reg_pred[indices]
-        pred_plot = PlotElement(x_sort, g_pred_sort, "Predicted Causal Effect (Ours)")
-        true_plot = PlotElement(x_sort, g_true_sort, "Actual Causal Effect")
-        reg_NN_plot = PlotElement(x_sort, reg_pred_sort, "Direct predictions from Neural Network")
-        fig, ax = plt.subplots()
-        ax = pred_plot.plot(ax=ax)
-        ax = reg_NN_plot.plot(ax=ax)
-        ax = true_plot.plot(ax=ax, save_path=f'plots/comparison_{self.args.run_name}_.png')
-        # mlops.log_training_finished_status()
-        # mlops.log_aggregation_finished_status()
+        if self.args.dataset == 'zoo':            
+            x = self.test_global['x'].detach().cpu().numpy()
+            g_pred = g_pred.detach().cpu().numpy()
+            g_true = self.test_global['g'].detach().cpu().numpy()
+            reg_pred = reg_pred.detach().cpu().numpy()
+            indices = numpy.argsort(x, axis = 0).flatten() 
+            x_sort = x[indices]
+            g_pred_sort = g_pred[indices]
+            g_true_sort = g_true[indices]
+            reg_pred_sort = reg_pred[indices]
+            pred_plot = PlotElement(x_sort, g_pred_sort, "Predicted Causal Effect (Ours)")
+            true_plot = PlotElement(x_sort, g_true_sort, "Actual Causal Effect")
+            reg_NN_plot = PlotElement(x_sort, reg_pred_sort, "Direct predictions from Neural Network")
+            fig, ax = plt.subplots()
+            ax = pred_plot.plot(ax=ax)
+            ax = reg_NN_plot.plot(ax=ax)
+            save_path = f'plots/hetero/{self.args.scenario_name}/comparison_{self.args.run_name}_.png' if self.args.data_hetero else \
+                        f'plots/homo/{self.args.scenario_name}/comparison_{self.args.run_name}_.png'
+            ax = true_plot.plot(ax=ax, save_path=save_path)
+        
 
     def _client_sampling(self, round_idx, client_num_in_total, client_num_per_round):
         if client_num_in_total == client_num_per_round:
@@ -329,9 +331,9 @@ class FedAvgAPI(object):
         return [g, f]
 
     def calc_f_g_obj(self, global_val):
-        x = global_val.x
-        y = global_val.y
-        z = global_val.z
+        x = global_val['x']
+        y = global_val['y']
+        z = global_val['z']
         num_data = x.shape[0]
         num_batch = math.ceil(num_data * 1.0 / self.args.batch_size)
         g_of_x = None
@@ -342,9 +344,9 @@ class FedAvgAPI(object):
                 batch_idx = list(range(b*self.args.batch_size, (b+1)*self.args.batch_size))
             else:
                 batch_idx = list(range(b*self.args.batch_size, num_data))
-            x_batch = x[batch_idx]
-            z_batch = z[batch_idx]
-            y_batch = y[batch_idx]
+            x_batch = x[batch_idx].to(self.device)
+            z_batch = z[batch_idx].to(self.device)
+            y_batch = y[batch_idx].to(self.device)
             g_obj, _ = self.model_trainer.game_objective.calc_objective(self.model_trainer.g, self.model_trainer.f, x_batch, z_batch, y_batch)
             g_of_x_batch = self.model_trainer.g(x_batch).detach().cpu()
             f_of_z_batch = self.model_trainer.f(z_batch).detach().cpu()
@@ -363,11 +365,11 @@ class FedAvgAPI(object):
         self.g = self.model_trainer.g.eval()
         g_of_x_train, f_of_z_train, obj_train = self.calc_f_g_obj(self.train_global)
         g_of_x_dev, f_of_z_dev, obj_dev = self.calc_f_g_obj(self.val_global)
-        epsilon_dev = g_of_x_dev - self.val_global.y.cpu()
-        epsilon_train = g_of_x_train - self.train_global.y.cpu()
+        epsilon_dev = g_of_x_dev - self.val_global['y'].cpu()
+        epsilon_train = g_of_x_train - self.train_global['y'].cpu()
         curr_eval = approx_psi_eval(epsilon_dev, self.dev_f_collection,
                                             self.e_dev_tilde)
-        g_error = epsilon_dev + self.val_global.y.cpu() - self.val_global.g.cpu()
+        g_error = epsilon_dev + self.val_global['y'].cpu() - self.val_global['g'].cpu()
         mse = float((g_error ** 2).mean())
         self.eval_list.append(curr_eval)
         self.mse_list.append(mse)

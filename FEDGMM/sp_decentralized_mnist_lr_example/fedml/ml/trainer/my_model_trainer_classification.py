@@ -61,8 +61,8 @@ class ModelTrainerCLS(ClientTrainer):
 
             for epoch in range(args.epochs):
                 for batch in client_data:
-                    x_batch = batch[2]
-                    y_batch = batch[3]
+                    x_batch = batch[2].to(device)
+                    y_batch = batch[3].to(device)
                     model.zero_grad()
                     preds = torch.squeeze(model(x_batch))
                     truee = torch.squeeze(y_batch)
@@ -127,9 +127,9 @@ class ModelTrainerCLS(ClientTrainer):
     # loop through training data
         for epoch in range(args.epochs):
             for batch in client_data:
-                x_batch = batch[2]
-                y_batch = batch[3]
-                z_batch = batch[4]
+                x_batch = batch[2].to(device)
+                y_batch = batch[3].to(device)
+                z_batch = batch[4].to(device)
                 g_obj, f_obj = self.game_objective.calc_objective(
                     g, f, x_batch, z_batch, y_batch)
 

@@ -1,0 +1,199 @@
+wandb_version: 1
+
+yaml_config_file:
+  desc: null
+  value: /home/shubham/Federated/FEDGMM/sp_decentralized_mnist_lr_example/config/Scenario:sin_lr:0.01_Homogeneous_FedGMM.yaml
+run_id:
+  desc: null
+  value: '0'
+rank:
+  desc: null
+  value: 0
+local_rank:
+  desc: null
+  value: 0
+node_rank:
+  desc: null
+  value: 0
+role:
+  desc: null
+  value: client
+run_device_id:
+  desc: null
+  value: '0'
+using_mlops:
+  desc: null
+  value: false
+yaml_paths:
+  desc: null
+  value:
+  - /home/shubham/Federated/FEDGMM/sp_decentralized_mnist_lr_example/config/Scenario:sin_lr:0.01_Homogeneous_FedGMM.yaml
+backend:
+  desc: null
+  value: sp
+config_version:
+  desc: null
+  value: dev
+mlops_api_key:
+  desc: null
+  value: c9356b9c4ce44363bb66366b210201
+mlops_project_name:
+  desc: null
+  value: simulation_2
+mlops_run_name:
+  desc: null
+  value: fedml_torch_fedavg_mnist_lr_1
+random_seed:
+  desc: null
+  value: 0
+scenario_name:
+  desc: null
+  value: sin
+training_type:
+  desc: null
+  value: simulation
+data_cache_dir:
+  desc: null
+  value: /home/shubham/.cache/fedml_data
+data_hetero:
+  desc: null
+  value: false
+data_per_client:
+  desc: null
+  value: 600
+dataset:
+  desc: null
+  value: zoo
+partition_alpha:
+  desc: null
+  value: 0.5
+partition_method:
+  desc: null
+  value: hetero
+psi_eval_burn_in:
+  desc: null
+  value: 2
+psi_eval_max_no_progress:
+  desc: null
+  value: 20
+gpu_id:
+  desc: null
+  value: 0
+using_gpu:
+  desc: null
+  value: true
+model:
+  desc: null
+  value: lr
+enable_tracking:
+  desc: null
+  value: false
+enable_wandb:
+  desc: null
+  value: true
+run_name:
+  desc: null
+  value: Scenario:sin_lr:0.01_Homogeneous_FedGMM
+wandb_entity:
+  desc: null
+  value: shubham22124
+wandb_key:
+  desc: null
+  value: d99d2566208f899b41fe157bc466bece6d1789e2
+wandb_project:
+  desc: null
+  value: FEDGMM
+batch_size:
+  desc: null
+  value: 32
+client_id_list:
+  desc: null
+  value: '[]'
+client_num_in_total:
+  desc: null
+  value: 100
+client_num_per_round:
+  desc: null
+  value: 10
+client_optimizer:
+  desc: null
+  value: sgd
+comm_round:
+  desc: null
+  value: 1
+epochs:
+  desc: null
+  value: 2
+epochs_model_selection:
+  desc: null
+  value: 15
+federated_optimizer:
+  desc: null
+  value: FedAvg
+learning_rate:
+  desc: null
+  value: 0.01
+weight_decay:
+  desc: null
+  value: 0.001
+burn_in:
+  desc: null
+  value: 5
+eval_freq:
+  desc: null
+  value: 1
+frequency_of_the_test:
+  desc: null
+  value: 2
+max_no_progress:
+  desc: null
+  value: 20
+print_freq:
+  desc: null
+  value: 2
+print_freq_mul:
+  desc: null
+  value: 1
+verbose:
+  desc: null
+  value: true
+video_plotter:
+  desc: null
+  value: false
+worker_num:
+  desc: null
+  value: 10
+sys_perf_profiling:
+  desc: null
+  value: true
+_wandb:
+  desc: null
+  value:
+    python_version: 3.10.14
+    cli_version: 0.16.5
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1713797243.0
+    t:
+      1:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 105
+      2:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 105
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.10.14
+      5: 0.16.5
+      8:
+      - 5
+      13: linux-x86_64

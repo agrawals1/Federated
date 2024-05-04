@@ -89,6 +89,8 @@ class ModelTrainerCLS(ClientTrainer):
                 )
             )
             
+            return epoch_loss[-1]
+            
     def train_iterations(self, train_data, device, args):
         model = self.model
 

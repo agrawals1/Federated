@@ -254,7 +254,7 @@ def load_dataset(dataset_name, transform):
     }
     
     # Get the relevant class, directory, and number of classes
-    dataset_info = dataset_classes.get(dataset_name, dataset_classes["CIFAR100"])
+    dataset_info = dataset_classes.get(dataset_name, dataset_classes["MNIST"])
     dataset_class = dataset_info["class"]
     dataset_dir = dataset_info["dir"]
     num_classes = dataset_info["num_classes"]
@@ -266,10 +266,16 @@ def load_dataset(dataset_name, transform):
     return train_dataset, test_dataset, num_classes
 
 def read_data_dirichlet(args, dataset_name, alpha, num_clients=7):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    if dataset_name == "MNIST":        
+        transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+            ])
+    else:        
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
     
     train_dataset, test_dataset, num_classes = load_dataset(dataset_name, transform)
 

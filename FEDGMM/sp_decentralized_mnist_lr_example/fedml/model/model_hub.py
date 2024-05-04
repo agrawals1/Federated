@@ -1,7 +1,7 @@
 import logging
 import torch
 import torch.nn as nn
-from fedml.model.cv.cnn import CNN_DropOut, CNN_WEB
+from fedml.model.cv.cnn import CNN_DropOut, CNN_WEB, DefaultCNN
 from fedml.model.cv.darts import genotypes
 from fedml.model.cv.darts.model import NetworkCIFAR
 from fedml.model.cv.darts.model_search import Network
@@ -30,14 +30,25 @@ def create(args, output_dim):
                      activation=nn.LeakyReLU).double(),
         ]
         f_models = [
-            MLPModel(input_dim=2, layer_widths=[20],
+            MLPModel(input_dim=1, layer_widths=[20],
                      activation=nn.LeakyReLU).double(),
         ]
         reg_models = [
             MLPModel(input_dim=1, layer_widths=[20, 3],
                      activation=nn.LeakyReLU).double(),
         ]
+    elif args.dataset == 'MNIST_GMM':
+        g_models = [
+            DefaultCNN(cuda=True),
+        ]
         
+        f_models = [
+            DefaultCNN(cuda=True),
+        ]
+        
+        reg_models = [
+            DefaultCNN(cuda=True),
+        ]   
         if torch.cuda.is_available():
             for i, g in enumerate(g_models):
                 g_models[i] = g.cuda()

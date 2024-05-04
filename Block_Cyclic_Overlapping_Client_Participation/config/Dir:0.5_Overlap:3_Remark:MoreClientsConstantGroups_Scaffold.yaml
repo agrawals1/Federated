@@ -1,0 +1,54 @@
+comm_args:
+  backend: sp
+common_args:
+  AdaptiveDecay: 2
+  alpha_dirichlet: 0.5
+  config_version: dev
+  data_split: true
+  dirichlet_seed: 993522575
+  group_norm_size: 0
+  group_wise_models: false
+  lr_update_freq: 5
+  mlops_api_key: c9356b9c4ce44363bb66366b210201
+  mlops_project_name: simulation_2
+  mlops_run_name: fedml_torch_fedavg_COCP
+  overlap_num: 3
+  overlap_type: MoreClients
+  random_seed: 0
+  server_optim: false
+  training_type: simulation
+  var_epoch: 0
+data_args:
+  data_cache_dir: ~/fedml_data
+  dataset: CIFAR100
+device_args:
+  gpu_id: 2
+  using_gpu: true
+model_args:
+  model: RESNET_18
+tracking_args:
+  enable_tracking: false
+  enable_wandb: true
+  resume_wandb: false
+  run_name: Dir:0.5_Overlap:3_Remark:MoreClientsConstantGroups_Scaffold
+  wandb_entity: shubham22124
+  wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
+  wandb_project: ECML_TEST_CIFAR100
+train_args:
+  batch_size: 32
+  client_id_list: '[]'
+  client_num_in_total: 100
+  client_optimizer: sgd
+  comm_round: 500
+  epochs: 2
+  federated_optimizer: Scaffold
+  learning_rate: 0.2
+  momentum: 0.9
+  num_groups: 5
+  server_lr: 0.01
+  server_optimizer: Adam
+  total_cycles: 150
+  total_groups: 10
+  weight_decay: 1.0e-05
+validation_args:
+  frequency_of_the_test: 1

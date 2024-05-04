@@ -5,46 +5,50 @@ common_args:
   mlops_api_key: c9356b9c4ce44363bb66366b210201
   mlops_project_name: simulation_2
   mlops_run_name: fedml_torch_fedavg_mnist_lr_1
-  scenario_name: "step"
+  scenario_name: "abs"
 data_args:
-  dataset: "zoo"
+  dataset: 'MNIST_GMM'
   data_cache_dir: ~/.cache/fedml_data
   partition_method: "hetero"
   partition_alpha: 0.5
   psi_eval_max_no_progress: 20
-  psi_eval_burn_in: 50
-  # psi_eval_burn_in: 2
+  # psi_eval_burn_in: 50
+  data_per_client: 600
+  data_hetero: True
+  homo_var: 5
+  homo_zrange: 10
+  psi_eval_burn_in: 2
 model_args:
   model: "lr"
 
 train_args:
   federated_optimizer: "FedAvg"
   client_id_list: "[]"
-  client_num_in_total: 10
+  client_num_in_total: 100
   client_num_per_round: 10
-  comm_round: 350 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
-  # comm_round: 5
+  # comm_round: 350 # 3 is for quick GitHub sanity check. please change this to your own hyper-parameters (e.g., 200)
+  comm_round: 1
   epochs: 2
-  epochs_model_selection: 2000
-  # epochs_model_selection: 15
-  batch_size: 200
+  # epochs_model_selection: 500
+  epochs_model_selection: 5
+  batch_size: 32
   client_optimizer: sgd
   learning_rate: 0.0005
   weight_decay: 0.001
 
 validation_args:
-  frequency_of_the_test: 20
-  # frequency_of_the_test: 2
-  print_freq: 10
-  # print_freq: 2
+  # frequency_of_the_test: 20
+  frequency_of_the_test: 2
+  # print_freq: 10
+  print_freq: 2
   verbose: True
-  print_freq_mul: 5
-  # print_freq_mul: 1
-  burn_in: 100
-  # burn_in: 5
+  # print_freq_mul: 5
+  print_freq_mul: 1
+  # burn_in: 100
+  burn_in: 5
   max_no_progress: 20
-  eval_freq: 20
-  # eval_freq: 1 
+  # eval_freq: 20
+  eval_freq: 1 
   video_plotter: False
 
 device_args:
@@ -61,5 +65,5 @@ tracking_args:
   wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
   wandb_entity: shubham22124
   wandb_project: FEDGMM
-  run_name: comm_round-350_epochs_model_selection-2000_scenario_name-step
+  run_name: comm_round-350_scenario_name-abs_heterogeneous_data_MNIST
   using_mlops: false

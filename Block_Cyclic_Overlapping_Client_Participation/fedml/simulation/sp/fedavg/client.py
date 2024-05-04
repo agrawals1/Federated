@@ -73,11 +73,11 @@ class Client:
         self.model_trainer.set_model_params(w_global)
 
         # Train the model on the selected data slice
-        self.model_trainer.train(train_data_slice, self.device, self.args)
+        loss = self.model_trainer.train(train_data_slice, self.device, self.args)
 
         # Retrieve and return the updated model weights
         weights = self.model_trainer.get_model_params()
-        return weights
+        return weights, loss
     
     def train_participation_normalised_Scaffold(self, part_cnt, current_part_num, c_model_global_param, w_global=None):
         if current_part_num not in self.c_models_local:

@@ -1,0 +1,53 @@
+comm_args:
+  backend: sp
+common_args:
+  config_version: dev
+  mlops_api_key: c9356b9c4ce44363bb66366b210201
+  mlops_project_name: simulation_2
+  mlops_run_name: fedml_torch_fedavg_mnist_lr_1
+  random_seed: 0
+  scenario_name: abs
+  training_type: simulation
+data_args:
+  data_cache_dir: ~/.cache/fedml_data
+  data_hetero: false
+  data_per_client: 600
+  dataset: zoo
+  partition_alpha: 0.5
+  partition_method: hetero
+  psi_eval_burn_in: 50
+  psi_eval_max_no_progress: 20
+device_args:
+  gpu_id: 3
+  using_gpu: true
+model_args:
+  model: lr
+tracking_args:
+  enable_tracking: false
+  enable_wandb: true
+  run_name: Scenario:abs_lr:0.01_Hmomogeneous_FedGMM
+  using_mlops: false
+  wandb_entity: shubham22124
+  wandb_key: d99d2566208f899b41fe157bc466bece6d1789e2
+  wandb_project: FEDGMM
+train_args:
+  batch_size: 32
+  client_id_list: '[]'
+  client_num_in_total: 100
+  client_num_per_round: 10
+  client_optimizer: sgd
+  comm_round: 350
+  epochs: 2
+  epochs_model_selection: 2000
+  federated_optimizer: FedAvg
+  learning_rate: 0.01
+  weight_decay: 0.001
+validation_args:
+  burn_in: 100
+  eval_freq: 20
+  frequency_of_the_test: 20
+  max_no_progress: 20
+  print_freq: 10
+  print_freq_mul: 5
+  verbose: true
+  video_plotter: false

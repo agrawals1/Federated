@@ -1,0 +1,203 @@
+wandb_version: 1
+
+yaml_config_file:
+  desc: null
+  value: /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/config/Dir:100.0_Overlap:3_Remark:MoreGroupsConstantClients_Scaffold.yaml
+run_id:
+  desc: null
+  value: '0'
+rank:
+  desc: null
+  value: 0
+local_rank:
+  desc: null
+  value: 0
+node_rank:
+  desc: null
+  value: 0
+role:
+  desc: null
+  value: client
+run_device_id:
+  desc: null
+  value: '0'
+using_mlops:
+  desc: null
+  value: false
+yaml_paths:
+  desc: null
+  value:
+  - /home/shubham/Federated/Block_Cyclic_Overlapping_Client_Participation/config/Dir:100.0_Overlap:3_Remark:MoreGroupsConstantClients_Scaffold.yaml
+backend:
+  desc: null
+  value: sp
+AdaptiveDecay:
+  desc: null
+  value: 2
+alpha_dirichlet:
+  desc: null
+  value: 100.0
+config_version:
+  desc: null
+  value: dev
+data_split:
+  desc: null
+  value: true
+dirichlet_seed:
+  desc: null
+  value: 993522575
+group_norm_size:
+  desc: null
+  value: 0
+group_wise_models:
+  desc: null
+  value: false
+lr_update_freq:
+  desc: null
+  value: 5
+mlops_api_key:
+  desc: null
+  value: c9356b9c4ce44363bb66366b210201
+mlops_project_name:
+  desc: null
+  value: simulation_2
+mlops_run_name:
+  desc: null
+  value: fedml_torch_fedavg_COCP
+overlap_num:
+  desc: null
+  value: 3
+overlap_type:
+  desc: null
+  value: MoreGroups
+random_seed:
+  desc: null
+  value: 0
+server_optim:
+  desc: null
+  value: false
+training_type:
+  desc: null
+  value: simulation
+var_epoch:
+  desc: null
+  value: 0
+data_cache_dir:
+  desc: null
+  value: /home/shubham/fedml_data
+dataset:
+  desc: null
+  value: CIFAR100
+gpu_id:
+  desc: null
+  value: 1
+using_gpu:
+  desc: null
+  value: true
+model:
+  desc: null
+  value: RESNET_18
+enable_tracking:
+  desc: null
+  value: false
+enable_wandb:
+  desc: null
+  value: true
+resume_wandb:
+  desc: null
+  value: false
+run_name:
+  desc: null
+  value: Dir:100.0_Overlap:3_Remark:MoreGroupsConstantClients_Scaffold
+wandb_entity:
+  desc: null
+  value: shubham22124
+wandb_key:
+  desc: null
+  value: d99d2566208f899b41fe157bc466bece6d1789e2
+wandb_project:
+  desc: null
+  value: ECML_TEST_CIFAR100
+batch_size:
+  desc: null
+  value: 32
+client_id_list:
+  desc: null
+  value: '[]'
+client_num_in_total:
+  desc: null
+  value: 100
+client_optimizer:
+  desc: null
+  value: sgd
+comm_round:
+  desc: null
+  value: 500
+epochs:
+  desc: null
+  value: 2
+federated_optimizer:
+  desc: null
+  value: Scaffold
+learning_rate:
+  desc: null
+  value: 0.2
+momentum:
+  desc: null
+  value: 0.9
+num_groups:
+  desc: null
+  value: 5
+server_lr:
+  desc: null
+  value: 0.01
+server_optimizer:
+  desc: null
+  value: Adam
+total_cycles:
+  desc: null
+  value: 150
+total_groups:
+  desc: null
+  value: 10
+weight_decay:
+  desc: null
+  value: 1.0e-05
+frequency_of_the_test:
+  desc: null
+  value: 1
+sys_perf_profiling:
+  desc: null
+  value: true
+_wandb:
+  desc: null
+  value:
+    python_version: 3.10.14
+    cli_version: 0.16.5
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1713885675.0
+    t:
+      1:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 105
+      2:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 105
+      3:
+      - 13
+      - 14
+      - 16
+      - 23
+      4: 3.10.14
+      5: 0.16.5
+      8:
+      - 5
+      13: linux-x86_64

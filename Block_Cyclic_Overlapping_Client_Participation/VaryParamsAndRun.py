@@ -13,13 +13,14 @@ curr_dir = os.path.dirname(current_file)
 os.chdir(curr_dir)
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 datasets = ["CIFAR100"]
-batch_sizes = [64]
+batch_sizes = [32]
 strategies = ["client_sampling_cyclic_overlap_pattern"]
-learning_rates = [0.1] 
+learning_rates = [0.2] 
 decays = [1e-5]
-# betas = [0.05, 0.1, 0.5, 10.0]  # parameter for dirichlet distribution
-betas = [0.1]
-overlaps = [0, 1, 3, 5, 7, 9] # Client overlap count
+# betas = [1.0, 100.0, 0.5, 0.1]  # parameter for dirichlet distribution
+# betas = [0.1]
+# overlaps = [0,3,6]
+overlaps = [9] # Client overlap count
 comm_rounds = [500]
 # seeds = [3087732978, 918854724, 2152041540, 548193746, 993522575, 1531166731, 3136455588, 3525945833, 2018934764, 1770634816]
 seeds = [993522575]
@@ -27,7 +28,7 @@ group_norms = [0]
 AdaptiveDecays = [2]
 lr_update_freqs = [5]
 data_split = [True]
-overlap_types = ["MoreClients", "MoreGroups"]
+overlap_types = ["MoreGroups"]
 
 
 def run_federation_with_semaphore(semaphore, beta, overlap, gpu_id, ot, split, round, lr, bs, decay, seed=6967677, group_norm=0, freq=4, decay_fact=4, dataset="CIFAR10"):
@@ -42,7 +43,7 @@ def run_federation_with_semaphore(semaphore, beta, overlap, gpu_id, ot, split, r
         else:
             Remark = "Complete_Data"
     # Remark += "_Data_Split" if split else "_Full_Data"
-    run_name = f"Dir:{beta}_Overlap:{overlap}_Remark:{Remark}"
+    run_name = f"Dir:{beta}_Overlap:{overlap}_Remark:{Remark}_FedAvg"
     try:
         run_federation(beta, overlap, gpu_id, ot, round, lr, bs, decay, split, seed, group_norm, freq, decay_fact, epochs, run_name, dataset)
     finally:
@@ -105,7 +106,7 @@ def check_gpu_memory(gpu_id, required_memory = 1024*1024*1024):
     return info.free >= required_memory
                 
 
-def update_and_run_config(gpu_id):
+def update_and_run_config(gpu_id, beta):
     max_processes = 50
     semaphore = Semaphore(max_processes)  # Controls the number of active processes
     processes = []
@@ -119,20 +120,20 @@ def update_and_run_config(gpu_id):
                             # for lr in learning_rates:
                                 # for decay in decays:
                                     # for round in comm_rounds:
-    for beta in betas:
-        for overlap in overlaps:
-            for split in data_split:
-                for ot in overlap_types:
-                # for seed in seeds:                                
-                    # Wait if the number of active processes reaches the limit
-                    semaphore.acquire()
-                    while not check_gpu_memory(gpu_id):
-                        time.sleep(120)
+    
+    for overlap in overlaps:
+        for split in data_split:
+            for ot in overlap_types:
+            # for seed in seeds:                                
+                # Wait if the number of active processes reaches the limit
+                semaphore.acquire()
+                while not check_gpu_memory(gpu_id):
+                    time.sleep(120)
 
-                    p = Process(target=run_federation_with_semaphore, args=(semaphore, beta, overlap, gpu_id, ot, split, comm_rounds[0], learning_rates[0], batch_sizes[0], decays[0], seeds[0], group_norms[0], lr_update_freqs[0], AdaptiveDecays[0], datasets[0]))
-                    processes.append(p)
-                    p.start()
-                    time.sleep(200)
+                p = Process(target=run_federation_with_semaphore, args=(semaphore, beta, overlap, gpu_id, ot, split, comm_rounds[0], learning_rates[0], batch_sizes[0], decays[0], seeds[0], group_norms[0], lr_update_freqs[0], AdaptiveDecays[0], datasets[0]))
+                processes.append(p)
+                p.start()
+                time.sleep(200)
 
     for p in processes:
         p.join()
@@ -141,5 +142,6 @@ def update_and_run_config(gpu_id):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run federation for a specific GPU')
     parser.add_argument('--gpu_id', type=int, required=True, help='GPU id to use (0, 1, 2, 3)')
+    parser.add_argument('--beta', type=float, required=True, help='betas = [1.0, 100.0, 0.5, 0.1]')
     args = parser.parse_args()
-    update_and_run_config(args.gpu_id)
+    update_and_run_config(args.gpu_id, args.beta)
